@@ -1,0 +1,12 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# patterns of file and directory names for git to ignore
+# learn: https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# ignore everything (because dotfiles reside in $HOME)
+/*
+
+# except following files and directories
+!.gitignore
+!.gitconfig
+! README.md
