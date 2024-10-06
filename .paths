@@ -1,0 +1,73 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set PATH and aliases for Windows environment.
+# 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# remember initial PATH, reset before rebuild (avoiding PATH accumulation)
+[ "$PPATH" ] && export PATH="$PPATH" || export PPATH="$PATH"
+
+# add Java path for 'java', 'javac', 'jar', 'javap' commands
+export JAVA_HOME="/c/Program Files/Java/jdk-21"
+export PATH="${PATH}:${JAVA_HOME}/bin"
+
+# add Maven path for 'mvn' command
+export M2_HOME="$HOME/.m2"
+export MAVEN_HOME="/c/opt/maven"
+export PATH="${PATH}:${MAVEN_HOME}/bin"
+
+# add Python path for 'python' command
+export PYTHON_HOME="/c/Users/svgr2/AppData/Local/Programs/Python/Python312"
+export PATH="${PATH}:${PYTHON_HOME}"
+export PATH="${PATH}:${PYTHON_HOME}/Scripts"
+
+# add Docker path for 'docker' command
+export DOCKER_HOME="/c/Program Files/Docker/Docker"
+export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
+
+# add MySQL workbench path for 'mysql' client
+export MYSQL_HOME="/c/Program Files/MySQL/MySQL Workbench 8.0 CE"
+export PATH="${PATH}:${MYSQL_HOME}"
+
+# add Qt paths
+export QT_HOME="/c/opt/Qt6"
+export PATH="${PATH}:${QT_HOME}/Tools/mingw1120_64/bin" # g++ to run Qt Makefiles
+export PATH="${PATH}:${QT_HOME}/6.2.4/mingw_64/bin"     # link Qt*.dll's
+
+# remove duplicates from PATH keeping order, avoid path accumulation
+# in sub-shells or with repeated sourcing
+# function deduplicate() {
+#     local parr=(); local sep=""; IFS=":";
+#     for p in $1; do
+#         if [[ ! "${parr[*]}" =~ ":${p}" ]]; then
+#             parr+="${sep}${p}"; sep=":"
+#         else
+#             echo "dup: ${p}" >/dev/tty
+#         fi
+#     done; echo "${parr[*]}"; unset IFS
+# }
+# export PATH=$(deduplicate "$PATH")
+# unset -f deduplicate
+
+
+# start eclipse assuming workspace in parent directory
+function eclipse() {
+    "/c/opt/eclipse/eclipse.exe" "-data .." "$*" >/dev/null 2>/dev/null &
+}
+
+# start StarUML, e.g. "staruml Customer.mdj"
+function staruml() {
+    "/c/Program Files/StarUML/StarUML.exe" "$*" &
+}
+
+# start StarUML, e.g. "staruml Customer.mdj"
+function sublime() {
+    "/c/opt/sublime/sublime_text.exe" "$*" &
+}
+
+# start Chrome with local file or directory, e.g. "chrome doc/index.html"
+function chrome() {
+    [[ "$1" ]] && local path="$*" || local path="."
+    # convert to file-URL with absolute path, e.g. 'file://C:/svgr2/se1-bestellsystem/.env.sh'
+    path=$(realpath "$path" | sed -e 's/^\/[a-zA-Z]/file:\/\U&:/')
+    # 
+    "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" "$path" >/dev/null 2>/dev/null &
+}
