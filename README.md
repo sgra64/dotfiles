@@ -47,7 +47,85 @@ terminal multiplexer.
  +--.vimrc                      # settings for the 'vim' editor
  |
  +-<.tmux>                      # directory with settings for the 'tmux' terminal multiplexer
-   +--default.conf              # preset with 2 vertical terminal panel
-   +--dev2x2.conf               # preset with 2x2 terminal panels
-   +--tmux.md                   # brief 'tmux' introduction
+ |  +--default.conf             # preset with 2 vertical terminal panel
+ |  +--dev2x2.conf              # preset with 2x2 terminal panels
+ |  +--tmux.md                  # brief 'tmux' introduction
+ |
+ +--dotfiles_git.tar            # distribution repository (.git repository)
+ +--dotfiles_git.zip
 ```
+
+
+## Setup
+
+You can inspect files and choose which ones to use.
+You can also use regular checkout into a `dotfiles` folder and
+move/copy files to `$HOME`.
+
+Another way is to unpack the `.git` repository directly into
+the `$HOME` directory from
+[dotfiles_git.tar](dotfiles_git.tar) or
+[dotfiles_git.zip](dotfiles_git.zip).
+
+Then, the `$HOME` directory will act like the `dotfiles` repository.
+Files can be regularly checked out:
+
+```sh
+cd $HOME                    # cd into $HOME, 'dotfiles_git.tar' is assumed there
+ls -la dotfiles_git.tar
+-rw-r--r-- 1 81920 Oct  6 13:11 dotfiles_git.tar
+
+tar xvf dotfiles_git.tar    # unpack '.git'-repository from tar-file
+
+ls -la                      # show local '.git'-repository
+drwxr-xr-x 1 svgr2 Kein     0 Oct  6 13:13 .git
+
+git checkout .              # check-out dotfiles from '.git'-repository
+
+ls -la                      # new dotfiles are present
+```
+```
+-rw-r--r-- 1  3935 Oct  6 13:15 .ansi-colors.sh
+-rw-r--r-- 1 12730 Oct  6 13:15 .bashrc
+drwxr-xr-x 1     0 Oct  6 13:15 .git/
+-rw-r--r-- 1   964 Oct  6 13:15 .gitconfig
+-rw-r--r-- 1   515 Oct  6 13:15 .gitignore
+-rw-r--r-- 1   376 Oct  6 13:15 .minttyrc
+-rw-r--r-- 1  2593 Oct  6 13:15 .paths
+-rw-r--r-- 1  5807 Oct  6 13:15 .profile
+drwxr-xr-x 1     0 Oct  6 13:15 .tmux/
+-rw-r--r-- 1  1056 Oct  6 13:15 .vimrc
+-rw-r--r-- 1   360 Oct  6 13:15 .zprofile
+-rw-r--r-- 1  4640 Oct  6 13:15 .zshrc
+-rw-r--r-- 1  2590 Oct  6 13:15 README.md
+```
+
+The local `.git` repository can now be detached from the remote.
+
+```sh
+git branch -r -d origin/main    # remove remote branch
+
+git remote rm origin            # remove origin (remote-link)
+
+rm dotfiles_git.*               # remove .tar/.zip
+```
+
+Next, enter *name* and *email* for global suer git setting in *.gitconfig*.
+
+```sh
+git config --global user.name "your name"
+git config --global user.email "your@email.com"
+```
+
+Commit changes:
+
+```sh
+git add .gitconfig
+git commit -m "entered name, email for .gitconfig"
+```
+
+Advantage of this method is that *dotfiles* remain under
+git control in a local `.git`-repository in `$HOME`.
+
+This is useful for restoring prior versions and evolving
+*dotfiles* under own control.
