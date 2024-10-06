@@ -10,21 +10,23 @@ default. To show them, follow instructions for
 [*Windows*](https://support.microsoft.com/en-us/windows/view-hidden-files-and-folders-in-windows-97fbc472-c603-9d90-91d0-1166d1d9f4b5).
 
 Login (new terminal) and startup (new shell process) scripts are:
-[*.profile*](.profile),
-[*.zprofile*](.zprofile) (Mac),
-[*.bashrc*](.bashrc),
-[*.zshrc*](.zshrc) (Mac).
+*.profile*, *.zprofile* (Mac), *.bashrc*, *.zshrc* (Mac).
 
-Script
-[*.paths*](.paths)
-includes definitions for the
+Script *.paths* includes definitions for the
 [*$PATH*](https://medium.com/@linuxadminhacks/what-is-the-path-variable-in-linux-and-unix-98267b7432b8)
 environment variable. It is used by *.bashrc* and *.zshrc*.
-Script
-[*.ansi-colors.sh*](.ansi-colors.sh)
-defines
+Script *.ansi-colors.sh* defines
 [*ANSI Color Codes*](https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797)
 for colored prompt and terminal output.
+
+File *.mintty* has definitions for the mintty terminal (used by cygwin, Gitbash).
+File *.vimrc* contains settings for the
+[*vim*](https://www.freecodecamp.org/news/vim-beginners-guide/)
+editor.
+
+Directory *.tmux* stores settings for the
+[*tmux*](https://www.perl.com/article/an-introduction-to-tmux/)
+terminal multiplexer.
 
 
 ```sh
@@ -45,7 +47,7 @@ for colored prompt and terminal output.
  +--.vimrc                      # settings for the 'vim' editor
  |
  +-<.tmux>                      # directory with settings for the 'tmux' terminal multiplexer
-   +--default.conf              # tmux preset with 2 vertical terminal panel
-   +--dev2x2.conf               # tmux preset with 2x2 terminal panels
-   +--tmux.md                   # tmux introduction
+   +--default.conf              # preset with 2 vertical terminal panel
+   +--dev2x2.conf               # preset with 2x2 terminal panels
+   +--tmux.md                   # brief 'tmux' introduction
 ```
