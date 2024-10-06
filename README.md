@@ -9,20 +9,17 @@ default. To show them, follow instructions for
 [*Mac*](https://www.macworld.com/article/671158/how-to-show-hidden-files-on-a-mac.html) or
 [*Windows*](https://support.microsoft.com/en-us/windows/view-hidden-files-and-folders-in-windows-97fbc472-c603-9d90-91d0-1166d1d9f4b5).
 
-The second commit includes login (new terminal) and startup (new shell
-process) scripts:
+Login (new terminal) and startup (new shell process) scripts are:
 [*.profile*](.profile),
 [*.zprofile*](.zprofile) (Mac),
 [*.bashrc*](.bashrc),
 [*.zshrc*](.zshrc) (Mac).
 
-In addition, script
+Script
 [*.paths*](.paths)
 includes definitions for the
 [*$PATH*](https://medium.com/@linuxadminhacks/what-is-the-path-variable-in-linux-and-unix-98267b7432b8)
-environment variable.
-It is used by *.bashrc* and *.zshrc*.
-
+environment variable. It is used by *.bashrc* and *.zshrc*.
 Script
 [*.ansi-colors.sh*](.ansi-colors.sh)
 defines
@@ -41,7 +38,14 @@ for colored prompt and terminal output.
  +--.zprofile                   # zsh login script (Mac)
  +--.bashrc                     # bash startup script (runs with new bash process)
  +--.zshrc                      # zsh startup script (runs with new zsh process)
- |
  +--.paths                      # PATH definitions (used by .bashrc, .zshrc)
  +--.ansi-colors.sh             # ANSI color codes for colored prompt and terminal output
+ |
+ +--.minttyrc                   # definitions for the mintty terminal (used by cygwin, Gitbash)
+ +--.vimrc                      # settings for the 'vim' editor
+ |
+ +-<.tmux>                      # directory with settings for the 'tmux' terminal multiplexer
+   +--default.conf              # tmux preset with 2 vertical terminal panel
+   +--dev2x2.conf               # tmux preset with 2x2 terminal panels
+   +--tmux.md                   # tmux introduction
 ```
