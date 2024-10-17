@@ -1,0 +1,106 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Section of system-specific PATH definitions
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# 'X1 Carbon' Windows laptop environment (cygwin, git-bash)
+if [[ "$1" =~ Win:. ]]; then
+
+    # Java installation directory (commands: 'java', 'javac', 'jar', 'javap')
+    export JAVA_HOME="/c/Program Files/Java/jdk-21"
+    export PATH="${PATH}:${JAVA_HOME}/bin"  # use as example to build PATH variable
+
+    # Maven repository and installation directories ('mvn' command)
+    export M2_HOME="$HOME/.m2"
+    export MAVEN_HOME="/c/opt/maven"
+
+    # Python installation directory ('python' command)
+    export PYTHON_HOME="/c/Users/svgr2/AppData/Local/Programs/Python/Python312"
+
+    # Docker installation directory ('docker' command)
+    export DOCKER_HOME="/c/Program Files/Docker/Docker"
+
+    # MySQL workbench installation directory ('mysql' client)
+    export MYSQL_HOME="/c/Program Files/MySQL/MySQL Workbench 8.0 CE"
+
+    # Qt installation directory
+    export QT_HOME="/c/opt/Qt6"
+
+    # 'append[]' is used to add to PATH variable (use before PATH reset)
+    append=(
+        # find paths from existing commands
+        "$(which git 2>/dev/null)"
+        "$(which code 2>/dev/null)"
+        "$(which powershell 2>/dev/null)"
+        # configured paths
+        "${JAVA_HOME}/bin"
+        "${MAVEN_HOME}/bin"
+        "${PYTHON_HOME}"
+        "${PYTHON_HOME}/Scripts"
+        "${DOCKER_HOME}/resources/bin"
+        "${MYSQL_HOME}"
+        "${QT_HOME}/Tools/mingw1120_64/bin"
+        "${QT_HOME}/6.2.4/mingw_64/bin"
+        # include Windows paths
+        "C:\WINDOWS" "C:\WINDOWS\system32"
+    )
+
+    # reset prior Windows PATH entries and replace with common Unix paths
+    PATH=".:/usr/bin:/bin:/usr/local/bin"
+
+    # startup function for eclipse assuming workspace in parent directory
+    function eclipse() {
+        "/c/opt/eclipse/eclipse.exe" "-data .." "$*" >/dev/null 2>/dev/null &
+    }
+
+    # startup function for StarUML, e.g. "staruml Customer.mdj"
+    function staruml() {
+        "/c/Program Files/StarUML/StarUML.exe" "$*" &
+    }
+
+    # startup function for sublime, e.g. "sublime README.md"
+    function sublime() {
+        "/c/opt/sublime/sublime_text.exe" "$*" &
+    }
+
+    # startup function for Chrome with local file or directory, e.g. "chrome doc/index.html"
+    function chrome() {
+        [[ "$1" ]] && local path="$*" || local path="."
+        # convert to file-URL with absolute path, e.g. 'file://C:/svgr2/se1-bestellsystem/.env.sh'
+        path=$(realpath "$path" | sed -e 's/^\/[a-zA-Z]/file:\/\U&:/')
+        # 
+        "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" "$path" >/dev/null 2>/dev/null &
+    }
+fi
+
+if [[ "${#append[@]}" > 0 ]]; then 
+    # 
+    function append_path() {
+        declare -A dup      # store paths as keys to detect duplicates
+        local append=()     # array with verified (and cygified) paths
+        [[ "$1" =~ Win:. ]] && [ -f /usr/bin/cygpath ] && local win=true
+        shift               # shift $1 (system)
+        IFS='@'; for p in $@; do        # IFS='@' avoids spaces as seperators
+            [ -z "$p" ] && continue     # skip empty path args
+                                        # cygify path with '\' on Windows
+            [[ "$win" && "$p" =~ \\ ]] && p=$(/usr/bin/cygpath "$p")
+            [ -z ${dup["$p"]} ] &&      # avoid duplicate path entries
+                if [ -d "$p" ]; then    # probe directory path exists
+                    append+=("$p"); dup["$p"]="1"
+                else
+                    # if file (e.g. from `which`), get directory & probe it extists
+                    [ -f "$p" ] && \
+                        p=$(/usr/bin/dirname "$p") && \
+                        [ -d "$p" ] && append+=("$p") && dup["$p"]="1" \
+                            || echo ".paths: could not find path: \"$p\"" >/dev/tty
+                fi \
+            || echo ".paths: duplicate path entry: \"$p\"" >/dev/tty
+        done;
+        IFS=':'; echo "${append[*]}"    # return as ':'-separated string via <stdout>
+        unset IFS dup
+    }
+    # 
+    # IFS='@' prevents whitespaces in ${append[@]} entries as args[] seperators
+    IFS='@'; PATH="$PATH:$(append_path $1 ${append[@]})"
+    unset IFS append
+    unset -f append_path    # append_path() function no longer needed
+fi

@@ -10,3 +10,10 @@
 !.gitignore
 !.gitconfig
 ! README.md
+
+!.profile
+!.zprofile
+!.bashrc
+!.zshrc
+!.paths
+!.ansi-colors.sh
