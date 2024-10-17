@@ -1,4 +1,4 @@
-# dotfiles
+# *dotfiles*
 
 *"Dotfiles"* are files or directories with names that start with a dot `.`
 and contain vital setup and configuration information for the system and
@@ -47,7 +47,179 @@ terminal multiplexer.
  +--.vimrc                      # settings for the 'vim' editor
  |
  +-<.tmux>                      # directory with settings for the 'tmux' terminal multiplexer
-   +--default.conf              # preset with 2 vertical terminal panel
-   +--dev2x2.conf               # preset with 2x2 terminal panels
-   +--tmux.md                   # brief 'tmux' introduction
+ | +--default.conf              # preset with 2 vertical terminal panel
+ | +--dev2x2.conf               # preset with 2x2 terminal panels
+ | +--tmux.md                   # brief 'tmux' introduction
+ |
+ +--dotfiles_git.tar            # .tar archive with dotfile .git repository
+ +--dotfiles_git.zip            # .zip archive
+```
+
+
+&nbsp;
+
+## Installing *dotfiles*
+
+### Step 1: Install local dotfile *.git* Repository
+
+In order to install dotfiles, fetch
+[dotfiles_git.tar](https://raw.githubusercontent.com/sgra64/dotfiles/refs/heads/main/dotfiles_git.tar) or
+[dotfiles_git.zip](https://raw.githubusercontent.com/sgra64/dotfiles/refs/heads/main/dotfiles_git.zip)
+and un-tar or unzip in the $HOME directory.
+
+```sh
+cd $HOME                        # cd to $HOME directory
+tar xvf dotfiles_git.tar        # unpack .tar file creating local .git repository in $HOME
+
+git status                      # test status of dotfile git repository
+```
+
+Dotfiles that are already present in $HOME are shown as *modified*,
+new dotfiles appear as *deleted* (not yet present)).
+
+```
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        deleted:    .ansi-colors.sh
+        modified:   .bashrc
+        deleted:    .gitconfig
+        deleted:    .gitignore
+        deleted:    .minttyrc
+        deleted:    .paths
+        modified:   .profile
+        deleted:    .tmux/default.conf
+        deleted:    .tmux/dev2x2.conf
+        deleted:    .tmux/tmux.md
+        deleted:    .vimrc
+        deleted:    .zprofile
+        deleted:    .zshrc
+        deleted:    README.md
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        dotfiles_git.tar
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+
+&nbsp;
+
+### Step 2: Check-out *dotfiles*
+
+Dotfiles can be checked out from the local git-repository:
+
+```sh
+git checkout .                  # check-out dotfiles
+
+ls -la                          # show files
+```
+
+New dotfiles are now in the $HOME directory and effective immetiately.
+
+```
+total 151
+drwxr-xr-x 1     0 Oct 18 00:03 ./
+drwxr-xr-x 1     0 Oct 17 23:57 ../
+-rw-r--r-- 1  3935 Oct 18 00:03 .ansi-colors.sh
+-rw-r--r-- 1 13939 Oct 18 00:03 .bashrc
+drwxr-xr-x 1     0 Oct 18 00:03 .git/
+-rw-r--r-- 1   964 Oct 18 00:03 .gitconfig
+-rw-r--r-- 1   516 Oct 18 00:03 .gitignore
+-rw-r--r-- 1   376 Oct 18 00:03 .minttyrc
+-rw-r--r-- 1  4384 Oct 18 00:03 .paths
+-rw-r--r-- 1  4462 Oct 18 00:03 .profile
+drwxr-xr-x 1     0 Oct 18 00:03 .tmux/
+-rw-r--r-- 1  1056 Oct 18 00:03 .vimrc
+-rw-r--r-- 1   360 Oct 18 00:03 .zprofile
+-rw-r--r-- 1  4640 Oct 18 00:03 .zshrc
+-rw-r--r-- 1  2590 Oct 18 00:03 README.md
+-rw-r--r-- 1 81920 Oct 17 23:58 dotfiles_git.tar
+```
+
+
+&nbsp;
+
+### Step 3: Update *dotfiles*
+
+Dotfiles need to be adjusted to your environment.
+
+Git requires name and email configured in `.gitconfig` in your $HOME
+directory. Enter your name and email either by commands:
+
+```sh
+git config --global user.name "your name"
+git config --global user.email "your@email.com"
+```
+
+or by editing `.gitconfig` directly:
+
+```sh
+# must spefify your name:
+# - git config --global user.name "your name"
+# - git config --global user.email "your@email.com"
+# [user]
+#   name = Sven Graupner
+#   email = sgraupner@bht-berlin.de
+[user]
+    name = your first and last name
+    email = your email address
+
+# leave other parts unchanged
+```
+
+Adjust paths in `.paths` depending on your system, for example
+the $PATH to the Java JDK:
+
+```sh
+# Java installation directory (commands: 'java', 'javac', 'jar', 'javap')
+export JAVA_HOME="/c/Program Files/Java/jdk-21"
+export PATH="${PATH}:${JAVA_HOME}/bin"
+```
+
+
+&nbsp;
+
+### Step 3: Clean-up and Committing Changes
+
+The initial `dotfiles_git.tar` is no longer needed as is `README.md` that
+came with the check-out.
+
+Remove these files and commit changes made to `.gitconfig` and `.paths`:
+
+```sh
+rm dotfiles_git.* README.md         # remove files
+
+git status
+```
+```
+On branch main
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .gitconfig
+        modified:   .paths
+        deleted:    README.md
+```
+
+Commit changes back to the local .git repository:
+
+```sh
+git add .                           # stage and commit changes
+git commit -m "update .gitconfig, .paths"
+```
+
+The last step is to detach the .git repository from its remote source.
+You can add your own remote repository.
+
+```sh
+git branch -r -d origin/main        # remove remote branch
+git remote remove origin            # remove remote repository URL
+
+git remote add origin <your url>    # add your own remote repository URL
 ```
