@@ -17,3 +17,7 @@
 !.zshrc
 !.paths
 !.ansi-colors.sh
+
+!.minttyrc
+!.vimrc
+!.tmux/

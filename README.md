@@ -42,4 +42,12 @@ terminal multiplexer.
  +--.zshrc                      # zsh startup script (runs with new zsh process)
  +--.paths                      # PATH definitions (used by .bashrc, .zshrc)
  +--.ansi-colors.sh             # ANSI color codes for colored prompt and terminal output
+ |
+ +--.minttyrc                   # definitions for the mintty terminal (used by cygwin, Gitbash)
+ +--.vimrc                      # settings for the 'vim' editor
+ |
+ +-<.tmux>                      # directory with settings for the 'tmux' terminal multiplexer
+   +--default.conf              # preset with 2 vertical terminal panel
+   +--dev2x2.conf               # preset with 2x2 terminal panels
+   +--tmux.md                   # brief 'tmux' introduction
 ```
