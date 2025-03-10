@@ -4,7 +4,6 @@
 # 
 if [ "$PX_EXPORT" ]; then
     declare -A PX="${PX_EXPORT#*=}"
-    echo "${PX[color]}: " "${PX[color]}"
 fi
 
 [ "${PX[log]}" ] && echo ".bashrc"
@@ -24,12 +23,6 @@ function setup_bash() {
         local colors=$(/usr/bin/tput colors)
         [[ "$SHELL" =~ zsh ]] && colors="${colors:3}"
         [[ "$colors" -gt 1 ]] && PX[has-color]="true"
-        # 
-        # if [ "$2" ]; then
-        #     export PX_color="$2"
-        # else
-        #     [ "${PX[has-color]}" ] && export PX_color="on" || export PX_color="off"
-        # fi
     fi
 
     case "$SHELL" in
@@ -134,7 +127,7 @@ function setup_bash() {
     # 
     if [ "${PX[color]}" ]; then
         # must set PS1 in sub-shell
-        color "${PX[color]}"    # set 'on' or 'off'
+        color "${PX[color]}"    # set color 'on' or 'off'
     else
         [ "${PX[has-color]}" = true ] && color on || color off
     fi
@@ -228,12 +221,6 @@ function color() {
         export PX_EXPORT="$(declare -p PX)"
 }
 
-
-
-# source color control functions for ANSI terminals
-# [ -f "$HOME/.ansi-colors.sh" ] && \
-#     builtin source "$HOME/.ansi-colors.sh"
-# 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # ANSI terminal control sequences for colors:
 # - https://en.wikipedia.org/wiki/ANSI_escape_code
@@ -287,12 +274,12 @@ declare -gA ANSI_COLORS=(
 # 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# set 'has-git' and 'has_realpath' if not coming through .login shell
-[ -z "${PX[has-git]}" -a -z "$has_realpath" ] && \
+# set 'has-git' and 'has-realpath' if not coming through .login shell
+[ -z "${PX[has-git]}" -a -z "${PX[has-realpath]}" ] && \
     for cmd in git realpath; do
         p=$(which "$cmd" 2>/dev/null)
         case "$p" in
-        */realpath)     has_realpath="true" ;;
+        */realpath)     PX[has-realpath]="true" ;;
         */git)          PX[has-git]="true" ;;
         esac
     done
@@ -301,7 +288,7 @@ RPATH=$HOME
 RPWD=$HOME
 
 # probe for git and realpath commands and, if present, overload 'cd' for git-prompt
-[ "${PX[has-git]}" -a "$has_realpath" ] && \
+[ "${PX[has-git]}" -a "${PX[has-realpath]}" = true ] && \
     \
     function cd() {
         [ "$1" ] && builtin cd "$1" || builtin cd "$HOME"
@@ -353,6 +340,16 @@ alias grep="grep \$LS_COLOR"
 alias egrep="egrep \$LS_COLOR"
 alias pwd="pwd -LP"             # show real path with resolved links
 alias path="tr ':' '\n' <<< \$PATH"
+                                # supress env var with prompt strings, e.g. PS1, PX_EXPORT
+alias env="/usr/bin/env | grep -v '\['"
+# 
+[ "$MAVEN_HOME" ] && \
+    alias mvn="$MAVEN_HOME/bin/mvn $mvn_mono"   # -B: color off
+# 
+function h() {      # list history commands, select by $1
+    [ "$1" == "--all" ] && history | uniq -f 1 && return
+    [ "$1" ] && history | grep $1 | uniq -f 1 || history | tail -40
+}
 
 # set up git aliases, if git is installed
 [ "${PX[has-git]}" ] && \
@@ -364,6 +361,7 @@ alias path="tr ':' '\n' <<< \$PATH"
     alias gar="[ -d .git ] && tar cvf \$(date '+%y-%m%d-git.tar') .git || echo 'no .git directory'" && \
     alias gls="git show --name-status"
 
-
 setup_bash && \
     unset -f setup_bash
+
+cd .

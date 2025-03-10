@@ -6,9 +6,12 @@ PX[clean-envar]="true"          # clean environment variables
 PX[has-color]=""                # terminal has colors: true or false
 PX[color]=""                    # current color setting: 'on' or 'off'
 PX[log]=""                      # logging setting: 'on' or 'off'
+PX[has-git]=""                  # git is installed
+PX[has-realpath]=""             # realpath command is present
+PX[has-cygpath]=""              # cygpath command is present
 PX[git-project-name]=""         # name of current git project or ""
 # 
-PX[ps1-color]=""                # pattern for PS1 command line prompt
+PX[ps1-color]=""                # patterns for PS1 command line prompts
 PX[ps1-mono]=""
 PX[ps1-git-color]=""
 PX[ps1-git-mono]=""
@@ -21,12 +24,12 @@ function setup_profile() {
 
     PATH+=":/usr/local/bin:/usr/bin:/bin"
     # 
-    path_ext=""
+    local path_ext=""
     for cmd in git realpath cygpath code powershell; do
         p=$(which "$cmd" 2>/dev/null)
         case "$p" in
-        */realpath)     has_realpath="true" ;;
-        */cygpath)      has_cygpath="true" ;;
+        */realpath)     PX[has-realpath]="true" ;;
+        */cygpath)      local has_cygpath="true" ;;
         */git)          PX[has-git]="true"; path_ext+=":"$(/usr/bin/dirname "$p") ;;
         */code)         path_ext+=":"$(/usr/bin/dirname "$p") ;;
         */powershell)   path_ext+=":"$(/usr/bin/dirname "$p") ;;
@@ -35,7 +38,7 @@ function setup_profile() {
     # 
     export PATH=".:/usr/local/bin:/usr/bin:/bin""$path_ext"
 
-    [ "$has_realpath" = true -a "$HOME" ] && \
+    [ "${PX[has-realpath]}" = true -a "$HOME" ] && \
         export HOME="$(realpath $HOME)"
 
     [ "$has_cygpath" = true -a "$START_DIR" ] && \
@@ -50,7 +53,9 @@ function setup_profile() {
                 # cannot unset strange var: 'ProgramFiles(x86)' 'CommonProgramFiles(x86)' '!::', '_'
                 [[ "$v" =~  (ProgramFiles.x86.|^!::$|^_$) ]] && continue
                 # keep these variables, PROFILEREAD is read-only with zsh and can't be unset
-                [[ "$v" =~ ^(START_DIR|PATH|USER|HOSTNAME|HOME|LANG|SHELL|PWD|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && continue
+                [[ "$v" =~ ^(START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
+                    continue
+                # 
                 remove+=($v)
             done
             # remove all other environment variables inherited from Windows
@@ -98,11 +103,12 @@ function setup_profile() {
             [ "${PX[log]}" ] && echo -n " -> "
             builtin source "${HOME}/.bashrc" LOGIN
         fi
-        # set PATH from file '.profile-{ext}' first, if present
-        [ "$HOSTNAME" -a "${PX[$HOSTNAME]}" ] && \
-            local profile_ext=".profile-"$(/usr/bin/tr '[A-Z]' '[a-z]' <<< "${PX[$HOSTNAME]}") && \
-            [ -f "${HOME}/$profile_ext" ] && builtin source "${HOME}/$profile_ext"
     esac
+    # 
+    # set PATH from file '.profile-{ext}' first, if present
+    [ "$HOSTNAME" -a "${PX[$HOSTNAME]}" ] && \
+    local profile_ext=".profile-"$(/usr/bin/tr '[A-Z]' '[a-z]' <<< "${PX[$HOSTNAME]}") && \
+    [ -f "${HOME}/$profile_ext" ] && builtin source "${HOME}/$profile_ext"
 }
 
 
