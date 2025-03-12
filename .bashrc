@@ -42,6 +42,8 @@ function setup_bash() {
     # 
     [ -z "$PX_EXPORT" ] && \
         export PX_EXPORT="$(declare -p PX)"
+        local px_file="${HOME}/${PX[bashrc-ext]}.px"
+        [ ! -f "$px_file" ] && echo "$PX_EXPORT" > "$px_file"
     # 
     return 0
 }
@@ -72,7 +74,7 @@ function color() {
         fi
     done
     # 
-    # re-export PX array due if changed in 'PX[color]'
+    # re-export PX array if 'PX[color]' changed
     [ "${PX[color]}" != "$prev_col" ] && \
         export PX_EXPORT="$(declare -p PX)"
 }
