@@ -1,18 +1,13 @@
-[ "${PX[log]}" ] && echo -n " -> .zshrc" && bashrclog=" -> .bashrc"
+[ "${PX[log]}" ] && echo -n " -> .zshrc"
 
 # source color control functions for ANSI terminals
 [ -f "$HOME/.bashrc" ] && \
-    source "$HOME/.bashrc" $bashrclog && \
-    unset bashrclog
+    source "$HOME/.bashrc" LOGIN
 
 # autoload -Uz compinit
 # compinit
 # End of lines added by compinstall
 # macOS: use uname -s (not -o), see: https://www.unix.com/man-page/osx/1/uname
-
-
-# otherwise, commands like: wc $(find tmp -name '*.py') ill-process first line
-trap "" DEBUG
 
 ## History file configuration
 # https://github.com/ohmyzsh/ohmyzsh/blob/master/lib/history.zsh
@@ -27,3 +22,6 @@ setopt hist_ignore_dups       # ignore duplicated commands history list
 setopt hist_ignore_space      # ignore commands that start with space
 setopt hist_verify            # show command with history expansion to user before running it
 setopt share_history          # share command history data
+
+# https://stackoverflow.com/questions/34623956/how-to-get-absolute-path-on-a-zsh-prompt
+setopt PROMPT_SUBST

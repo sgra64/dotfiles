@@ -1,4 +1,8 @@
 
+# disable zsh from outputting ANSI escape characters in sub-processes screwing up
+# results such as in commands: wc $(find tmp -name '*.py') or colors="${colors:3}"
+trap "" DEBUG
+
 # extend PATH to find UNIX commands
 PATH="$PATH:/usr/bin:/bin:/usr/local/bin"
 
@@ -36,16 +40,15 @@ else
     PX[declared]=""                 # mark PX as not declared
     PX[color]=""                    # reset color to force setting in color()
 fi
-
-PX[log]=""                          # enable logging with setting any value
+PX[log]="true"                          # enable logging with setting any value
 # 
 if [ "${PX[log]}" ]; then
     [ "${PX[declared]}" = true ] && echo "declared PX[]" || echo "loaded PX[] from $px_file"
+    [[ "$SHELL" =~ zsh ]] && echo -n ".zprofile -> .profile" || echo -n ".profile"
 fi
 
 
 function setup_profile() {
-    [ "${PX[log]}" ] && echo -n ".profile"
     # 
     # locating commands from existing PATH
     local path_ext=""
@@ -61,6 +64,9 @@ function setup_profile() {
     done
     # 
     export PATH=".:/usr/local/bin:/usr/bin:/bin""$path_ext"
+
+    [ "${PX[has-realpath]}" = "true" ] && \
+        export HOME=$(realpath "$HOME")
 
     [ "$has_cygpath" = true -a "$START_DIR" ] && \
         export START_DIR=$(cygpath "${START_DIR//\"/}")
@@ -118,8 +124,14 @@ function setup_profile() {
     # - - - - - - - - - - - -
     [ "${PX[declared]}" = true ] && \
         build_colors
-
+    # 
     export LS_COLORS="${PX[ls-colors]}"
+
+    # avoid duplicate or empty (whitespaces) lines in history
+    # https://www.baeldung.com/linux/history-remove-avoid-duplicates
+    export HISTCONTROL=ignoreboth:erasedups
+    export HISTSIZE=999
+    export HISTFILESIZE=999
 
     # locate platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
     [ "$HOSTNAME" -a "${PX[$HOSTNAME]}" ] && \
@@ -150,19 +162,16 @@ if [ "${PX[declared]}" = true ]; then
             # export PS1_mono=$(echo -e '\! ${USER}@${HOSTNAME} ${PWD/${HOME}/\~}\n$ ')
             # 
             local reg_prompt=(
-                # reset     '\\\\\\\\\ \n'          # '\\' + '\n'
-                # reset     '\\\\\\\\\\\\\\\\\ \\n' # '\\' + '\n'
                 reset       '\\\\\\\\\ \n'          # '\\' + '\n'
                 green       '\! '                   # \! history number, \# command number
                 low-green   '\u@\047$HOSTNAME\047 ' # \u user, \h hostname
                 low-white   '(\D{%H:%M}) '          # time: (hh:mm)
                 yellow      '\w '                   # \w path relative to $HOME, \W only dirname
-                # yellow    '${PWD/${RPATH}/\~} '
+                # yellow    '${PWD/${RHOME}/\~} '
                 white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
                 white                               # color for typed command
             )
             local git_prompt=(
-                # reset     '\\\\\\\\\\\\\\\\\ \\n' # '\\' + '\n'
                 reset       '\\\\\\\\\ \n'          # '\\' + '\n'
                 green       '\! '                   # \! history number, \# command number
                 # low-green   '\u@\047$HOSTNAME\047 ' # \u user, \h hostname
@@ -175,7 +184,7 @@ if [ "${PX[declared]}" = true ]; then
                 purple      '$(git symbolic-ref --short HEAD 2>/dev/null)'
                 white       '] '
                 # 
-                red         '${RPWD/${RPATH}/\~} '  # path relative to project directory
+                red         '${RPWD/${RHOME}/\~} '  # path relative to project directory
                 white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
                 white                               # color for typed command
             )
@@ -186,8 +195,6 @@ if [ "${PX[declared]}" = true ]; then
             ;;
 
         *zsh)
-            [ "${PX[log]}" ] && echo -n ".zprofile"
-            # 
             # Building a custom zsh prompt from scratch
             # https://amitosh.medium.com/building-a-custom-zsh-prompt-from-scratch-3ff9fcbad67e
             # https://zsh.sourceforge.io/Doc/Release/Prompt-Expansion.html
@@ -197,25 +204,26 @@ if [ "${PX[declared]}" = true ]; then
             # export PS1_color=$(echo -e '%h %# \033[32m%n@%m \033[33m%~\033[0m\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
             # export PS1_mono=$(echo -e '%h %n@%m %~\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
             # 
-            export HOST="$HOSTNAME"             # zsh prompt '%m' refers to 'HOST'
+            export HOST="$HOSTNAME"                 # zsh prompt '%m' refers to 'HOST'
             local reg_prompt=(
-                # reset       '\\\\\ \\n'       # '\\' + '\n'
-                reset       '-- \n'             # '--' + '\n'
-                blue        '(%h) '             # (history number)
-                blue        '%n@\047%m\047 '    # user@'host'
-                low-white   '(%D{%K:%M}) '      # time: (hh:mm)
-                yellow      '%~'                # path relative to $HOME
-                white       '\n-> '             # newline + '->' (may need to be \012, not \n)
-                white                           # color for typed command
+                # reset       '\\\\\ \\n'           # '\\' + '\n'
+                reset       '-- \n'                 # '--' + '\n'
+                blue        '(%h) '                 # (history number)
+                blue        '%n@\047%m\047 '        # user@'host'
+                low-white   '(%D{%K:%M}) '          # time: (hh:mm)
+                yellow      '%~'                    # path relative to $HOME
+                white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
+                white                               # color for typed command
             )
             local git_prompt=(
-                reset       '-- \n'             # '--' + '\n'
-                blue        '(%h) '             # (history number)
-                blue        '%n@\047%m\047 '    # user@'host'
-                low-white   '(%D{%K:%M}) '      # time: (hh:mm)
-                red         '%~'                # path relative to $HOME
-                white       '\n-> '             # newline + '->' (may need to be \012, not \n)
-                white                           # color for typed command
+                reset       '-- \n'                 # '--' + '\n'
+                blue        '(%h) '                 # (history number)
+                blue        '%n@\047%m\047 '        # user@'host'
+                low-white   '(%D{%K:%M}) '          # time: (hh:mm)
+                # red         '%~'                  # path relative to $HOME
+                red         '$(echo ${RPWD/${RHOME}/\~}) '  # path relative to project directory
+                white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
+                white                               # color for typed command
             )
             PX[ps1-color]=$(colorize_prompt true "${reg_prompt[@]}")
             PX[ps1-mono]=$(colorize_prompt false "${reg_prompt[@]}")

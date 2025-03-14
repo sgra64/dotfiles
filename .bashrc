@@ -2,8 +2,8 @@
 # import PX associative array into child-shell from 'PX_EXPORT' variable, see brilliant advice at
 # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
 # 
-if [ "$PX_EXPORT" ]; then
-    # import PX associative array from PX_EXPORT environment variable
+# import PX associative array from PX_EXPORT in sub-shell to inherit properties
+if [[ "$SHELL" =~ bash && "$PX_EXPORT" ]]; then
     declare -A PX="${PX_EXPORT#*=}"
 fi
 
@@ -18,12 +18,9 @@ fi
 
 function setup_bash() {
     # 
-    # strange effect with zsh that 'proj_abs' has 3 ANSI ESC chars in front
-    if [ -z "${PX[has-color]}" ]; then
-        local colors=$(/usr/bin/tput colors)
-        [[ "$SHELL" =~ zsh ]] && colors="${colors:3}"
+    [ -z "${PX[has-color]}" ] && \
+        local colors=$(tput colors) && \
         [[ "$colors" -gt 1 ]] && PX[has-color]="true"
-    fi
     # 
     # declare functions defined in platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
     [ "${PX[bashrc-ext]}" ] && \
@@ -37,14 +34,17 @@ function setup_bash() {
         [ "${PX[has-color]}" = true ] && color on || color off
     fi
     # 
-    # export PX associative array via 'PX_EXPORT' variable to pass to child-shell, see brilliant advice at
+    # export PX associative array via 'PX_EXPORT' variable to pass to child-shell, brilliant advice from
     # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
-    # 
     [ -z "$PX_EXPORT" ] && \
         export PX_EXPORT="$(declare -p PX)"
-        local px_file="${HOME}/${PX[bashrc-ext]}.px"
-        [ ! -f "$px_file" ] && echo "$PX_EXPORT" > "$px_file"
     # 
+    if [[ "$SHELL" =~ bash && ! -f "$px_file" ]]; then
+        local px_file="${HOME}/${PX[bashrc-ext]}.px"
+        echo "$PX_EXPORT" > "$px_file"
+    fi
+    # 
+    trap "echo -ne '\e[m'" DEBUG    # reset formatting after command + ENTER
     return 0
 }
 
@@ -65,75 +65,58 @@ function color() {
             trap "echo -ne '\e[m'" DEBUG    # reset formatting after command + ENTER
         fi
         if [ "$arg" = "off" -a "$prev_col" != "$arg" ]; then
+            trap "" DEBUG    # disable ANSI escape caracters after command + ENTER
             PX[color]="off"
-            export TERM="dumb"              # monochrome terminal, turns git colors off
+            export TERM="dumb"              # monochrome terminal git responds to
             export PS1="${PX[ps1-mono]}"
             export LS_COLOR="--color=none"  # alt: "never"
             [ "${PX[git-project-name]}" ] && \
                 export PS1="${PX[ps1-git-mono]}" || export PS1="${PX[ps1-mono]}"
         fi
     done
-    # 
     # re-export PX array if 'PX[color]' changed
     [ "${PX[color]}" != "$prev_col" ] && \
         export PX_EXPORT="$(declare -p PX)"
 }
 
-# set 'has-git' and 'has-realpath' if not coming through .login shell
-[ -z "${PX[has-git]}" -a -z "${PX[has-realpath]}" ] && \
-    for cmd in git realpath; do
-        p=$(which "$cmd" 2>/dev/null)
-        case "$p" in
-        */realpath)     PX[has-realpath]="true" ;;
-        */git)          PX[has-git]="true" ;;
-        esac
-    done
-
-RPATH=$HOME
+# variables used in PS1 prompt to show path $RPWD relative to $RHOME
+RHOME=$HOME
 RPWD=$HOME
 
 # probe for git and realpath commands and, if present, overload 'cd' for git-prompt
-[ "${PX[has-git]}" -a "${PX[has-realpath]}" = true ] && \
+[ "${PX[has-git]}" ] && \
     \
     function cd() {
-        [ "$1" ] && builtin cd "$1" || builtin cd "$HOME"
-        RPWD=$(realpath "$PWD")
+        # 'cd' changes to $HOME or git project directory
+        [ -z "$1" ] && cd "$RHOME" && return 0
+        [ "$1" = "..." ] && cd "$HOME" && return 0
+        [ -d "$1" ] && builtin cd "$1" || return 0
         # 
-        # locate project directory, if cd'ed deep into a git project
-        for d in . .. ../.. ../../.. ../../../.. ../../../../.. ; do
-            [ -d "$d/.git" ] && \
-                local proj="$d" && break
+        [ "${PX[has-realpath]}" = true ] && \
+            RPWD=$(realpath "$PWD") || RPWD="$PWD"
+        # 
+        # locate git project directory traversing upwards in directory tree
+        local p="$RPWD"
+        while [[ ${#p} -gt 3 ]]; do
+            [ -d "$p/.git" -a "$p" != "$HOME" -a "$p" != "/c/Sven1/svgr2" ] && \
+                local proj_abs="$p" && break
+            p=${p%/*}   # p=$(dirname "$p")
         done
-        if [ "$proj" ]; then
-            # strange effect with zsh that 'proj_abs' has 3 unprintable chars in front
-            [[ "$SHELL" =~ zsh ]] && \
-                local proj_abs=$(realpath "$proj") && proj_abs="${proj_abs:3}" || \
-                local proj_abs=$(realpath "$proj")
-            # 
-            [ "$proj_abs" = "$HOME" ] && proj_abs=""
-            [ "$proj_abs" = "/c/Sven1/svgr2" ] && proj_abs=""
-        fi
+        # 
         if [ "$proj_abs" ]; then
-            if [ ! "$RPATH" = "$proj_abs" ]; then
+            if [ ! "$RHOME" = "$proj_abs" ]; then
                 PX[git-project-name]="${proj_abs//*\//}"    #  use last part of $proj_abs
-                RPATH="$proj_abs"
+                RHOME="$proj_abs"
                 [ "${PX[color]}" = "on" ] && \
                     export PS1="${PX[ps1-git-color]}" || export PS1="${PX[ps1-git-mono]}"
             fi
         else
-            RPATH="$HOME"
-            PX[git-project-name]=""
+            RHOME="$HOME"; PX[git-project-name]=""
             [ "${PX[color]}" = "on" ] && \
                 export PS1="${PX[ps1-color]}" || export PS1="${PX[ps1-mono]}"
         fi
+        return 0
     }
-
-
-# avoid duplicate or empty (whitespaces) lines in history
-# https://www.baeldung.com/linux/history-remove-avoid-duplicates
-export HISTCONTROL=ignoreboth:erasedups
-export HISTSIZE=999
-export HISTFILESIZE=999
 
 alias c="clear"
 alias aliases="alias"
