@@ -40,7 +40,7 @@ else
     PX[declared]=""                 # mark PX as not declared
     PX[color]=""                    # reset color to force setting in color()
 fi
-PX[log]="true"                          # enable logging with setting any value
+PX[log]=""                          # enable logging with setting any value
 # 
 if [ "${PX[log]}" ]; then
     [ "${PX[declared]}" = true ] && echo "declared PX[]" || echo "loaded PX[] from $px_file"
@@ -145,6 +145,7 @@ function setup_profile() {
     return 0
 }
 
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # include coloring functions only when PX[] was declared and needs values computed
 if [ "${PX[declared]}" = true ]; then
@@ -152,7 +153,6 @@ if [ "${PX[declared]}" = true ]; then
     function build_colors() {
         case "$SHELL" in
         *bash)
-            # 
             # GNU prompt control sequences for PS1 variable
             # https://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
             # 
@@ -167,7 +167,7 @@ if [ "${PX[declared]}" = true ]; then
                 low-green   '\u@\047$HOSTNAME\047 ' # \u user, \h hostname
                 low-white   '(\D{%H:%M}) '          # time: (hh:mm)
                 yellow      '\w '                   # \w path relative to $HOME, \W only dirname
-                # yellow    '${PWD/${RHOME}/\~} '
+                # yellow    '${PWD/${PRHOME}/\~} '
                 white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
                 white                               # color for typed command
             )
@@ -184,7 +184,7 @@ if [ "${PX[declared]}" = true ]; then
                 purple      '$(git symbolic-ref --short HEAD 2>/dev/null)'
                 white       '] '
                 # 
-                red         '${RPWD/${RHOME}/\~} '  # path relative to project directory
+                red         '${PWD/${PRHOME}/\~} '  # path relative to project directory
                 white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
                 white                               # color for typed command
             )
@@ -217,11 +217,20 @@ if [ "${PX[declared]}" = true ]; then
             )
             local git_prompt=(
                 reset       '-- \n'                 # '--' + '\n'
-                blue        '(%h) '                 # (history number)
-                blue        '%n@\047%m\047 '        # user@'host'
-                low-white   '(%D{%K:%M}) '          # time: (hh:mm)
+                green       '%h '                   # (history number)
+                # 
+                white       '['                     # show poject name in git-prompt
+                # blue        '$(echo -e "\e[1;34m"${PX[git-project-name]})'
+                blue        '${PX[git-project-name]}'
+                white       '] '
+                # 
+                white       '['                     # show branch in git-prompt
+                # remove ANSI reset seq "\e[0m" injected by zsh in front of 'branch' variable in $(git ...) execution
+                purple      '$(branch=$(git symbolic-ref --short HEAD 2>/dev/null); echo -e "\e[1;35m${branch#*[a-zA-Z]}")'
+                white       '] '
+                # 
                 # red         '%~'                  # path relative to $HOME
-                red         '$(echo ${RPWD/${RHOME}/\~}) '  # path relative to project directory
+                red         '$(echo -e "\e[1;31m"${PWD/${PRHOME}/\~}) '  # path relative to project directory
                 white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
                 white                               # color for typed command
             )
@@ -284,8 +293,7 @@ if [ "${PX[declared]}" = true ]; then
                 code="" && continue
         done;
         # 
-        # append unterminated color code (no '\[\e[0m\]' after text) to
-        # allow colored typing (commands)
+        # append unterminated color code (no '\[\e[0m\]' after text) for colored typing commands
         [ "$1" = true ] && [ "$code" ] && e+=$(ansi_code "$code" "--unterminated")
         # 
         echo -e "$e"    # printf "%s" "$e"  # output sequence for prompt (must quote "$e")
@@ -334,7 +342,7 @@ if [ "${PX[declared]}" = true ]; then
 
         ["broken-link"]="1;4;37;41" # used for broken links (white on red background)
     )
-
+    # 
     # https://stackoverflow.com/questions/6159856/how-do-zsh-ansi-colour-codes-work
     # for COLOR in {0..255}; do
     #     for STYLE in "38;5"; do 

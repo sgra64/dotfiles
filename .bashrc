@@ -79,39 +79,40 @@ function color() {
         export PX_EXPORT="$(declare -p PX)"
 }
 
-# variables used in PS1 prompt to show path $RPWD relative to $RHOME
-RHOME=$HOME
-RPWD=$HOME
+# variables used in PS1 prompt to show path $PWD relative to $PRHOME (project HOME)
+PRHOME=$HOME
 
-# probe for git and realpath commands and, if present, overload 'cd' for git-prompt
+# probe for git and overload 'cd' for using git-prompt in git project
 [ "${PX[has-git]}" ] && \
     \
     function cd() {
-        # 'cd' changes to $HOME or git project directory
-        [ -z "$1" ] && cd "$RHOME" && return 0
+        [ -z "$1" ] && cd "$PRHOME" && return 0
         [ "$1" = "..." ] && cd "$HOME" && return 0
+        [ -L "$1" ] && local is_link="true"
         [ -d "$1" ] && builtin cd "$1" || return 0
         # 
-        [ "${PX[has-realpath]}" = true ] && \
-            RPWD=$(realpath "$PWD") || RPWD="$PWD"
+        [ "$is_link" ] && \
+            export PWD=$(pwd) && \
+            [[ "$SHELL" =~ zsh ]] && PWD="/"${PWD#*/}
+            # for zsh, remove ANSI reset "\e[0m" front of 'PWD' variable from $(pwd) execution
         # 
-        # locate git project directory traversing upwards in directory tree
-        local p="$RPWD"
+        # attempt to locate git project traversing upwards in directory tree
+        local p="$PWD"
         while [[ ${#p} -gt 3 ]]; do
             [ -d "$p/.git" -a "$p" != "$HOME" -a "$p" != "/c/Sven1/svgr2" ] && \
                 local proj_abs="$p" && break
-            p=${p%/*}   # p=$(dirname "$p")
+            p=${p%/*}   # remove last part of path, same as: p=$(dirname "$p")
         done
         # 
         if [ "$proj_abs" ]; then
-            if [ ! "$RHOME" = "$proj_abs" ]; then
+            if [ ! "$PRHOME" = "$proj_abs" ]; then
                 PX[git-project-name]="${proj_abs//*\//}"    #  use last part of $proj_abs
-                RHOME="$proj_abs"
+                PRHOME="$proj_abs"
                 [ "${PX[color]}" = "on" ] && \
                     export PS1="${PX[ps1-git-color]}" || export PS1="${PX[ps1-git-mono]}"
             fi
         else
-            RHOME="$HOME"; PX[git-project-name]=""
+            PRHOME="$HOME"; PX[git-project-name]=""
             [ "${PX[color]}" = "on" ] && \
                 export PS1="${PX[ps1-color]}" || export PS1="${PX[ps1-mono]}"
         fi
