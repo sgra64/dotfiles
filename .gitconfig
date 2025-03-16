@@ -1,9 +1,11 @@
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# User's git settings - apply to all User's git projects when not overruled
-# by project git settings ./git/config
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Global git settings in $HOME/.gitconfig apply to all git projects of a user.
+# In addition, settings of a specifc git project are stored in the directory of
+# the project under <proj-dir>.git/config.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# must spefify your name:
+# Enter your name and email in the [user] section below either by editing or by
+# global git config commands:
 # - git config --global user.name "your name"
 # - git config --global user.email "your@email.com"
 [user]
@@ -11,14 +13,14 @@
     email = sgraupner@bht-berlin.de
 
 [core]
-    ignorecase = true       # ignore upper/lower case in filenames
+    ignorecase = true       # ignore upper/lower case in file names
     autocrlf = false        # disable crlf conversion on checkout
-    filemode = false        # ignore execute bit changes
-    eol = lf                # always use "\n" as end-of-line
+    filemode = false        # ignore filemode (rwx) changes
+    eol = lf                # always use newline '\n' as end-of-line
 
 [init]
     defaultBranch = main    # use 'main' as default branch
 
-[alias]                     # call aliases with: git <alias>
+[alias]                     # create aliases called with: git <alias> ...
     changed = show --pretty=\"format:\" --name-only
     conflicts = !git ls-files -u | cut -f 2 | sort -u

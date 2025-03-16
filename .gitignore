@@ -1,9 +1,9 @@
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# patterns of file and directory names for git to ignore
-# learn: https://www.atlassian.com/git/tutorials/saving-changes/gitignore
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Patterns of file or directory names for git to ignore, see
+# https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# ignore everything (because dotfiles reside in $HOME)
+# ignore everything (in $HOME)
 /*
 
 # except following files and directories

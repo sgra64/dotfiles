@@ -28,7 +28,7 @@ function setup_bash() {
         [ "${PX[log]}" ] && echo
     # 
     if [ "${PX[color]}" ]; then
-        # must set PS1 in sub-shell
+        # sets PS1 in sub-shell
         color "${PX[color]}"    # set color 'on' or 'off'
     else
         [ "${PX[has-color]}" = true ] && color on || color off
