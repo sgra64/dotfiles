@@ -1,5 +1,5 @@
 
-[ "${PX[log]}" ] && echo -n " -> .bashrc-win-x1"
+[ "${PX[log]}" ] && echo -n " -> .bashrc-paths"
 
 if [ "$1" = "LOGIN" ]; then
     # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')

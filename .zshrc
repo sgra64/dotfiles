@@ -1,3 +1,5 @@
+# .zshrc is executed when a new zsh process is started.
+
 [ "${PX[log]}" ] && echo -n " -> .zshrc"
 
 # source color control functions for ANSI terminals

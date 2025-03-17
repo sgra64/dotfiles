@@ -1,8 +1,10 @@
+# .bashrc is executed when a new bash process is started.
 
 # import PX associative array into child-shell from 'PX_EXPORT' variable, see brilliant advice at
 # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
 # 
 # import PX associative array from PX_EXPORT in sub-shell to inherit properties
+# 
 if [[ "$SHELL" =~ bash && "$PX_EXPORT" ]]; then
     declare -A PX="${PX_EXPORT#*=}"
 fi
@@ -23,9 +25,10 @@ function setup_bash() {
         [[ "$colors" -gt 1 ]] && PX[has-color]="true"
     # 
     # declare functions defined in platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
-    [ "${PX[bashrc-ext]}" ] && \
-        builtin source "${HOME}/${PX[bashrc-ext]}" "$1" && \
-        [ "${PX[log]}" ] && echo
+    [ -f "${HOME}/${PX[bashrc-ext]}" ] && \
+        builtin source "${HOME}/${PX[bashrc-ext]}" "$1"
+    # 
+    [ "${PX[log]}" ] && echo
     # 
     if [ "${PX[color]}" ]; then
         # sets PS1 in sub-shell
@@ -39,8 +42,8 @@ function setup_bash() {
     [ -z "$PX_EXPORT" ] && \
         export PX_EXPORT="$(declare -p PX)"
     # 
+    local px_file="${HOME}/${PX[bashrc-px]}"
     if [[ "$SHELL" =~ bash && ! -f "$px_file" ]]; then
-        local px_file="${HOME}/${PX[bashrc-ext]}.px"
         echo "$PX_EXPORT" > "$px_file"
     fi
     # 
@@ -89,7 +92,8 @@ PRHOME=$HOME
         [ -z "$1" ] && cd "$PRHOME" && return 0
         [ "$1" = "..." ] && cd "$HOME" && return 0
         [ -L "$1" ] && local is_link="true"
-        [ -d "$1" ] && builtin cd "$1" || return 0
+        [ ! -d "$1" ] && echo "cd $1: no such file or directory" && return 0 || \
+            builtin cd "$1"
         # 
         [ "$is_link" ] && \
             export PWD=$(pwd) && \
@@ -119,18 +123,18 @@ PRHOME=$HOME
         return 0
     }
 
-alias c="clear"
-alias aliases="alias"
+alias c="clear"                 # clear terminal
+alias aliases="alias"           # show aliases
 alias vi="vim"                  # use vim for vi, -u ~/.vimrc
-alias ls="/bin/ls \$LS_COLOR"   # colorize ls output
+alias ls="ls \$LS_COLOR"        # colorize ls output
 alias l="ls -alFog"             # detailed list with dotfiles
 alias ll="ls -l"                # detailed list with no dotfiles
-alias grep="grep \$LS_COLOR"
-alias egrep="egrep \$LS_COLOR"
+alias grep="grep \$LS_COLOR"    # enable colored output for grep command
+alias egrep="egrep \$LS_COLOR"  # enable colored output for egrep command
 alias pwd="pwd -LP"             # show real path with resolved links
-alias path="tr ':' '\n' <<< \$PATH"
-                                # supress env var with prompt strings, e.g. PS1, PX_EXPORT
-alias env="/usr/bin/env | grep -v '\['"
+alias path="tr ':' '\n' <<< \$PATH"         # pretty print PATH
+                                # show environment variables, except prompt strings,
+alias env="/usr/bin/env | grep -v '\['"     # e.g. PS1, PX_EXPORT
 # 
 [ "$MAVEN_HOME" ] && \
     alias mvn="$MAVEN_HOME/bin/mvn $mvn_mono"   # -B: color off
@@ -169,7 +173,6 @@ function crlf() {   # list text files with CR/LF (Windows) line endings
     alias gar="[ -d .git ] && tar cvf \$(date '+%y-%m%d-git.tar') .git || echo 'no .git directory'" && \
     alias gls="git show --name-status"
 
+# run bash setup script
 setup_bash "$1" && \
     unset -f setup_bash
-
-cd .

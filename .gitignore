@@ -11,7 +11,7 @@
 !.gitconfig
 
 !.profile
-!.bashrc-win-x1
+!.bashrc.path
 # !.zprofile    # created as link to .profile
 !.bashrc
 !.zshrc

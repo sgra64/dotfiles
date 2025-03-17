@@ -1,3 +1,4 @@
+# .profile is executed by the shell process when a new terminal is opened.
 
 # disable zsh from outputting ANSI escape characters in sub-processes screwing up
 # results such as in commands: wc $(find tmp -name '*.py') or colors="${colors:3}"
@@ -7,11 +8,14 @@ trap "" DEBUG
 PATH="$PATH:/usr/bin:/bin:/usr/local/bin"
 
 # attempt to locate platform-specific .px file to load PX[] array, e.g. '.bashrc-win-x1.px'
-[[ "$HOSTNAME" = "LAPTOP-V50CGD0T" && "$SHELL" =~ bash ]] && \
-    px_file=".bashrc-win-x1.px" && [ -f "${HOME}/$px_file" ] || unset px_file
+# [[ "$HOSTNAME" = "LAPTOP-V50CGD0T" && "$SHELL" =~ bash ]] && \
+#     px_file=".bashrc-win-x1.px" && [ -f "${HOME}/$px_file" ] || unset px_file
+# 
+[ -z "$px_file" ] && \
+    px_file=".bashrc.px" && [ -f "${HOME}/$px_file" ] || unset px_file
 
 # declare PX[] array or load from px_file
-if [ -z "$px_file" ]; then
+if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
     declare -gA PX
     PX[LAPTOP-V50CGD0T]="X1-Carbon" # map hostname to alias HOSTNAME used in prompt
     PX[X1-Carbon]="win-x1"          # map alias to 'ext' in '.profile-{ext}' for setting PATH
@@ -24,7 +28,8 @@ if [ -z "$px_file" ]; then
     PX[has-realpath]=""             # realpath command is present
     PX[has-cygpath]=""              # cygpath command is present
     PX[git-project-name]=""         # name of current git project or ""
-    PX[bashrc-ext]=""               # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
+    PX[bashrc-ext]=".bashrc.path"   # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
+    PX[bashrc-px]=".bashrc.px"      # platform-specific file to store PX[], e.g. '.bashrc-win-x1.px'
     # 
     PX[ps1-color]=""                # patterns for PS1 command line prompts
     PX[ps1-mono]=""
@@ -38,7 +43,7 @@ else
     export PX_EXPORT="$(cat ${HOME}/$px_file)"
     declare -A PX="${PX_EXPORT#*=}"
     PX[declared]=""                 # mark PX as not declared
-    PX[color]=""                    # reset color to force setting in color()
+    PX[color]=""                    # reset color to force setting in color() function
 fi
 PX[log]=""                          # enable logging with setting any value
 # 
@@ -133,12 +138,7 @@ function setup_profile() {
     export HISTSIZE=999
     export HISTFILESIZE=999
 
-    # locate platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
-    [ "$HOSTNAME" -a "${PX[$HOSTNAME]}" ] && \
-        PX[bashrc-ext]=".bashrc-"$(/usr/bin/tr '[A-Z]' '[a-z]' <<< "${PX[$HOSTNAME]}") && \
-        [ -f "${HOME}/${PX[bashrc-ext]}" ] || PX[bashrc-ext]=""
-    # 
-    # bash does not run ~/.bashrc implicitely
+    # bash does not run ~/.bashrc implicitely, hence source here
     [[ "$SHELL" =~ bash && -f "${HOME}/.bashrc" ]] && \
             builtin source "${HOME}/.bashrc" LOGIN
     # 
