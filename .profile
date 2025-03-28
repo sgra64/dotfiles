@@ -1,21 +1,23 @@
 # .profile is executed by the shell process when a new terminal is opened.
+# 
 
-# disable zsh from outputting ANSI escape characters in sub-processes screwing up
-# results such as in commands: wc $(find tmp -name '*.py') or colors="${colors:3}"
+# disable zsh from outputting ANSI escape characters in sub-processes after
+# prompts, e.g. in: wc $(find tmp -name '*.py') or colors="${colors:3}"
 trap "" DEBUG
 
 # extend PATH to find UNIX commands
 PATH="$PATH:/usr/bin:/bin:/usr/local/bin"
 
-# attempt to locate platform-specific .px file to load PX[] array, e.g. '.bashrc-win-x1.px'
+# locate platform-specific .px file, e.g. '.bashrc-win-x1.px' to load PX[] values
 # [[ "$HOSTNAME" = "LAPTOP-V50CGD0T" && "$SHELL" =~ bash ]] && \
 #     px_file=".bashrc-win-x1.px" && [ -f "${HOME}/$px_file" ] || unset px_file
 # 
 [ -z "$px_file" ] && \
     px_file=".bashrc.px" && [ -f "${HOME}/$px_file" ] || unset px_file
 
-# declare PX[] array or load from px_file
 if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
+    # 
+    # initialize PX[] array if cannot be loaded from px_file
     declare -gA PX
     PX[LAPTOP-V50CGD0T]="X1-Carbon" # map hostname to alias HOSTNAME used in prompt
     PX[X1-Carbon]="win-x1"          # map alias to 'ext' in '.profile-{ext}' for setting PATH
@@ -40,19 +42,28 @@ if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
     PX[home-cleanup]=".bash_history .lesshst .zsh_history .cache .vim "
     PX[declared]="true"             # mark PX as declared
 else
+    # load PX[] array from px_file
     export PX_EXPORT="$(cat ${HOME}/$px_file)"
     declare -A PX="${PX_EXPORT#*=}"
     PX[declared]=""                 # mark PX as not declared
     PX[color]=""                    # reset color to force setting in color() function
 fi
-PX[log]=""                          # enable logging with setting any value
-# 
-if [ "${PX[log]}" ]; then
+
+PX[log]=""                          # set 'true' to enable logging
+
+if [ "${PX[log]}" ]; then           # log script execution
     [ "${PX[declared]}" = true ] && echo "declared PX[]" || echo "loaded PX[] from $px_file"
     [[ "$SHELL" =~ zsh ]] && echo -n ".zprofile -> .profile" || echo -n ".profile"
 fi
 
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# main setup() function to
+#  - set environment variables: PATH, USER, HOSTNAME, LANG, LS_COLORS
+#  - clear env from variables inherited from Windows (on Windows only)
+#  - invoke .bashrc for bash
+# \\
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function setup_profile() {
     # 
     # locating commands from existing PATH
@@ -140,16 +151,22 @@ function setup_profile() {
 
     # bash does not run ~/.bashrc implicitely, hence source here
     [[ "$SHELL" =~ bash && -f "${HOME}/.bashrc" ]] && \
-            builtin source "${HOME}/.bashrc" LOGIN
+        builtin source "${HOME}/.bashrc" LOGIN
+    # 
+    # unset coloring functions that are no longer needed
+    [ "${PX[declared]}" = true ] && \
+        unset -f ansi_code colorize_prompt colorize_ls_colors || unset px_file
     # 
     return 0
 }
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# include coloring functions only when PX[] was declared and needs values computed
+# define coloring functions only when PX[] was declared (not loaded from .px file)
+# and coloring sequences (ANSI colors) need to be set up
+# 
 if [ "${PX[declared]}" = true ]; then
-    #
+    # 
     function build_colors() {
         case "$SHELL" in
         *bash)
@@ -366,15 +383,13 @@ if [ "${PX[declared]}" = true ]; then
     # - Restore cursor position               \033[u
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 
-fi
+fi  # [ "${PX[declared]}" = true ]
 
+# invoke main setup() function (that invokes .bashrc) and remove after execution
 setup_profile && \
     unset -f setup_profile
 
+# cd to START_DIR if terminal was opened from a context menu on a particular folder
 [ "$START_DIR" ] && \
     builtin cd "$START_DIR" || \
     builtin cd "$HOME"
-
-# unset coloring functions that are no longer needed
-[ "${PX[declared]}" = true ] && \
-    unset -f ansi_code colorize_prompt colorize_ls_colors || unset px_file

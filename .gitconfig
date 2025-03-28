@@ -1,13 +1,14 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Global git settings in $HOME/.gitconfig apply to all git projects of a user.
-# In addition, settings of a specifc git project are stored in the directory of
-# the project under <proj-dir>.git/config.
+# Additional settings for a specifc git project are stored in the project's
+# .git directory under <proj-dir>/.git/config.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Enter your name and email in the [user] section below either by editing or by
+# Enter your name and email in the [user] section below by editing or by
 # global git config commands:
 # - git config --global user.name "your name"
 # - git config --global user.email "your@email.com"
+# 
 [user]
     name = Sven Graupner
     email = sgraupner@bht-berlin.de

@@ -1,11 +1,11 @@
 # .bashrc is executed when a new bash process is started.
 
-# import PX associative array into child-shell from 'PX_EXPORT' variable, see brilliant advice at
-# https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
-# 
-# import PX associative array from PX_EXPORT in sub-shell to inherit properties
-# 
 if [[ "$SHELL" =~ bash && "$PX_EXPORT" ]]; then
+    # import PX associative array into child-shell from the 'PX_EXPORT' variable, see brilliant advice at
+    # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
+    # 
+    # import PX associative array from PX_EXPORT in sub-shell to inherit properties
+    # 
     declare -A PX="${PX_EXPORT#*=}"
 fi
 
@@ -173,6 +173,7 @@ function crlf() {   # list text files with CR/LF (Windows) line endings
     alias gar="[ -d .git ] && tar cvf \$(date '+%y-%m%d-git.tar') .git || echo 'no .git directory'" && \
     alias gls="git show --name-status"
 
-# run bash setup script
+# run bash setup script, need 'cd .' to set prompt in sub-shell
 setup_bash "$1" && \
+    cd . && \
     unset -f setup_bash
