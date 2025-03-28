@@ -1,0 +1,15 @@
+--- .gitconfig	2025-03-28 23:44:08.794009600 +0100
++++ .gitconfig.to_be	2025-03-28 23:45:43.613345900 +0100
+@@ -9,9 +9,9 @@
+ # - git config --global user.name "your name"
+ # - git config --global user.email "your@email.com"
+ # 
+-[user]
+-    name = Sven Graupner
+-    email = sgraupner@bht-berlin.de
++# [user]
++#     name = Sven Graupner
++#     email = sgraupner@bht-berlin.de
+ 
+ [core]
+     ignorecase = true       # ignore upper/lower case in file names
