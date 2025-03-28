@@ -1,0 +1,11 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Patterns of file or directory names for git to ignore, see
+# https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# ignore branch directories
+main
+main-dev
+env-java
+prior
+
