@@ -3,7 +3,6 @@
 #  - $1: 'LOGIN' passed when .bashrc runs on opening a terminal, otherwise
 #        .bashrc runs for a sub-shell that inherits exported variables
 # 
-
 [ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log script execution
 
 if [ "$HOSTNAME" = "X1-Carbon" ]; then
@@ -28,9 +27,10 @@ if [ "$HOSTNAME" = "X1-Carbon" ]; then
         export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
 
         # Qt installation directory
-        QT_HOME="/c/opt/Qt6"
-        export PATH="${PATH}:${QT_HOME}/Tools/mingw1120_64/bin"
-        export PATH="${PATH}:${QT_HOME}/6.2.4/mingw_64/bin"
+        QT_HOME="/c/opt/Qt"
+        export PATH="${PATH}:${QT_HOME}/Tools/mingw1310_64/bin"
+        # export PATH="${QT_HOME}/Tools/mingw1310_64/bin:${PATH}"
+        # export PATH="${PATH}:${QT_HOME}/6.8.2/mingw_64/bin"
         unset QT_HOME
 
         export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
