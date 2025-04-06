@@ -60,12 +60,37 @@ terminal multiplexer.
  +--dotfiles[date]-release-[rel].zip    # .zip archive with dotfile .git release repository
 ```
 
+Terminal appearance and capabilities can be highly customized in dotfiles.
+
+<table>
+<td valign="top">
+<img src="https://raw.githubusercontent.com/sgra64/dotfiles/refs/heads/markup/img/terminal-HOME.png" width="400"/>
+</td>
+<td valign="top">
+<img src="https://raw.githubusercontent.com/sgra64/dotfiles/refs/heads/markup/img/terminal-git.png" width="400"/>
+</td>
+</table>
+
+The Terminal to the left shows the *HOME* directory of a user with dotfiles, links and a
+`workspaces` folder.
+The prompt shows:
+the command number `708`,
+the user id and machine indicator `svgr2@'X1-Carbon'` (where the shell runs),
+the time `14:38` and
+the path `~` relative to HOME or `~/workspaces` after changing to this directory.
+
+The Terminal to the right is in "*git-project more*" showing a changed prompt with
+project name `[se1-play]` and branch `[main]` (purple) followed by the path `~` (red)
+relative to the project directory.
+
+Building and customizing the terminal prompt can be seen in file [*.profile*](.profile).
+
 
 &nbsp;
 
 ## Installing *dotfiles*
 
-### Step 1: Create dotfile *.git* Repository in *$HOME*
+### Step 1: Unpack dotfiles *.git* Repository in *$HOME*
 
 In order to install dotfiles, download archive files *dotfiles[date]-release-[rel].{tar,zip}*
 to your $HOME directory and unpack:
@@ -181,10 +206,10 @@ export PATH="${PATH}:${JAVA_HOME}/bin"
 
 ### Step 3: Clean-up and Commit Changes
 
-The initial `dotfiles_git.tar` is no longer needed as is `README.md` that
-came with the check-out.
+The initial `dotfiles[date]-release-[rel].tar` is no longer needed as is file
+`README.md` that came with the check-out.
 
-Remove these files and commit changes made to `.gitconfig` and `.paths`:
+Remove these files and commit the changes you made to `.gitconfig` and `.paths`:
 
 ```sh
 rm dotfiles*.tar                # remove files

@@ -6,7 +6,7 @@ PX[root-git]="git-main-root.tar"    # repo with empty root commit
 PX[main-dev]="main-dev"             # 'main-dev' branch and build directory
 PX[origin]="git@github.com:sgra64/dotfiles.git"
 # 
-PX[version]="1.1.0"
+PX[version]="1.2.0"
 PX[main-commit-line]="dotfiles release-${PX[version]}"
 
 
