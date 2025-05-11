@@ -166,12 +166,19 @@ function crlf() {   # list text files with CR/LF (Windows) line endings
 # set up git aliases, if git is installed
 [ "${PX[has-git]}" ] && \
     alias gt="git status" && \
-    alias log="git log --oneline" && \
+    alias checkout="co" && \
+    alias switch="co" && \
+    alias log="git log --oneline \$BRANCH" && \
     alias br="git branch -avv" && \
-    alias switch="git switch" && \
     alias prune="git reflog expire --expire=now --all; git gc --prune=now --aggressive" && \
     alias gar="[ -d .git ] && tar cvf \$(date '+%y-%m%d-git.tar') .git || echo 'no .git directory'" && \
     alias gls="git show --name-status"
+
+function co() {
+    [ "$1" ] && export BRANCH="$1" || export BRANCH="main"
+    # BRANCH variable is used to show full branch in detached HEAD state
+    git checkout "$BRANCH"
+}
 
 # run bash setup script, need 'cd .' to set prompt in sub-shell
 setup_bash "$1" && \
