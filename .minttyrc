@@ -1,0 +1,15 @@
+# Definitions for the mintty terminal used by cygwin and Git-Bash
+# see: https://github.com/mintty/mintty/wiki/Tips
+
+# set terminal to 56 lines and 80 columns, alternatively: printf '\e[8;40;100t'
+Rows=56
+Columns=80
+FontHeight=11
+Font=Lucida Console
+
+Term=xterm-direct
+ForegroundColour=128,128,128
+BackgroundColour=30,30,30
+CursorColour=220,50,47
+# Locale=de_DE
+Charset=UTF-8
