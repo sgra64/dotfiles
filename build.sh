@@ -1,94 +1,79 @@
 
 declare -gA PX
-PX[main-build-dir]="main"
-PX[main-dev-build-dir]="main-dev"
-PX[root-git]="git-main-root.tar"    # repo with empty root commit
-PX[main-dev]="main-dev"             # 'main-dev' branch and build directory
 PX[origin]="git@github.com:sgra64/dotfiles.git"
 # 
-PX[version]="1.2.0"
-PX[main-commit-line]="dotfiles release-${PX[version]}"
+PX[version]="1.2.1"
+PX[release-commit-msg]="dotfiles RELEASE-${PX[version]}"
 
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# branches:
+# - dev: records the development history
+# - main: records only the last (current) released commit in remote with all
+#         files showing the message of the release commit
+# 
+# Build process:
+# - Starting point is the 'dev'-branch in the local $HOME/.git repository.
+# - Commits are then pulled from $HOME/.git(dev) to the local 'dev' branch repo
+#   and pushed to the remote 'origin/dev' branch.
+# - Next, the release is built in the local 'main' branch repo by resetting the
+#   repo back to the 'root' commit and squashing the local 'dev' branch commits
+#   into one released commit with msg "PX[release-commit-msg]"."
+# - Push -f the local 'main' branch repo to the remote (origin).
+# 
 function build() {
-    case "$1" in
 
-    # pull 'main-dev' branch from remote repository
-    main-dev)
-        local build_dir="${PX[main-dev-build-dir]}"
-        [ -d "$build_dir" ] && rm -rf "$build_dir"
-        # 
-        # pull branch 'main-dev' from remote repository
-        git clone -b "${PX[main-dev]}" --single-branch "${PX[origin]}" "${PX[main-dev]}"
-        builtin cd "$build_dir"
-        # 
-        echo -e "pulled branch \047$build_dir\047 from remote \047dev/${PX[origin]}\047"
-        # 
-        # pull updates from local dev repo (in $HOME)
-        echo "pull updates from local dev repo ($HOME)"
-        git remote add "local-dev" "$HOME"
-        git pull local-dev "${PX[main-dev]}"
-        # 
-        echo -e "\n******\nconsider pushing local dev updates to remote:"
-        echo " - git push origin"
-        ;;
+    [ -z "$(git remote -v | grep origin)" ] && \
+        git remote add "origin" "${PX[origin]}"
 
-    # build 'main' branch pushed to remote repository
-    main)
-        local build_dir="${PX[main-build-dir]}"
-        [ -d "$build_dir" ] && rm -rf "$build_dir"
-        mkdir "$build_dir"
-        builtin cd "$build_dir"
-        # 
-        tar xf "../${PX[root-git]}"
-        # 
-        # add remote 'dev' repository to pull 'main-dev' branch
-        # [ -z "$(git remote get-url dev 2>/dev/null)" ] && \
-        #     git remote add dev "${PX[rdev]}"
-        git remote add dev "../${PX[main-dev]}"
-        # 
-        # pull 'main-dev' branch from remote 'dev' repository
-        local version="${PX[version]}"
-        local date=$(date +'%y%m%d')
-        git pull --squash dev "${PX[main-dev]}"
-        # 
-        # patch .gitconfig to put name and email in comments
-        # create patch file the original file and a file with changes:
-        # diff -Naru .gitconfig .gitconfig.to_be > ../gitconfig.patch
-        [ -f "../gitconfig.patch" ] && \
-            echo "patching: patch .gitconfig < ../gitconfig.patch" && \
-            patch .gitconfig < ../gitconfig.patch && \
-            git add .gitconfig
-        # 
-        git status
-        # use same commit message to show uniformly in github
-        git commit -m "${PX[main-commit-line]}" 2>/dev/null
-        # 
-        # remove remote branch and remote
-        git branch -rd "${PX[main-dev]}"
-        git remote remove dev
-        prune >/dev/null
-        # 
-        # package .git as .tar and .zip
-        tar cf dotfiles$date-$version.tar .git >/dev/null
-        zip -r  dotfiles$date-$version.zip .git >/dev/null
-        cp ../README.md .
-        # 
-        git add -f README.md dotfiles*.{tar,zip}
-        git commit -m "${PX[main-commit-line]}"
-        echo -e "built branch 'main' from \047dev/${PX[main-dev]}\047"
-        # 
-        git remote add origin "${PX[origin]}"
-        # 
-        if [ "$2" = "push" -o "$2" = "--push" ]; then
-            git push -f origin main
-            echo -e " - pushed to remote \047dev/${PX[origin]}\047)"
-        else
-            echo -e "\n******\nconsider pushing \047main\047 branch to remote:"
-            echo " - git push -f origin main"
-        fi
-        # builtin cd ..
-        ;;
+    # update local branch repo 'dev' from 'dev' branch in $HOME repo
+    update_local_dev dev "$HOME"
 
-    esac
+    # build release in local branch repo 'main' from '../dev' repo
+    build_release_on_main main "../dev"
 }
+
+function probe() {
+    cd dev
+    echo "in dev:"
+    git diff home-dev/dev --name-status
+    git diff origin/dev --name-status
+    cd ..
+    # 
+    cd main
+    echo "in main:"
+    git diff origin/main --name-status
+    cd ..
+}
+
+function update_local_dev() {
+    [ "$1" ] && local sub_div="$1" || sub_div="dev"
+    [ -d "$sub_div" ] && local cd_back=$(pwd) && builtin cd "$sub_div"
+
+    git pull home-dev dev
+    git push origin dev
+
+    [ "$cd_back" ] && builtin cd "$cd_back"
+}
+
+function build_release_on_main() {
+    [ "$1" ] && local sub_div="$1" || sub_div="main"
+    [ -d "$sub_div" ] && local cd_back=$(pwd) && builtin cd "$sub_div"
+
+    git reset --hard root
+    git pull --squash local-dev dev
+    git commit -m "${PX[release-commit-msg]}"
+    git push -f origin main
+
+    [ "$cd_back" ] && builtin cd "$cd_back"
+}
+
+# set-up remotes in: '.', 'main', 'dev'
+# 
+# git clone -b main --single-branch git@github.com:sgra64/dotfiles.git main
+# cd main
+# git remote add local-dev ../dev
+# 
+# git clone -b dev --single-branch git@github.com:sgra64/dotfiles.git dev
+# cd dev
+# git remote add home-dev $HOME
+# 
