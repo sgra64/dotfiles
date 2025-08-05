@@ -125,7 +125,7 @@ PRHOME=$HOME
 
 alias c="clear"                 # clear terminal
 alias aliases="alias"           # show aliases
-alias vi="vim"                  # use vim for vi, -u ~/.vimrc
+alias vi="vim"                  # use 'vim' for 'vi', -u ~/.vimrc
 alias ls="ls \$LS_COLOR"        # colorize ls output
 alias l="ls -alFog"             # detailed list with dotfiles
 alias ll="ls -l"                # detailed list with no dotfiles
@@ -135,6 +135,7 @@ alias pwd="pwd -LP"             # show real path with resolved links
 alias path="tr ':' '\n' <<< \$PATH"         # pretty print PATH
                                 # show environment variables, except prompt strings,
 alias env="/usr/bin/env | grep -v '\['"     # e.g. PS1, PX_EXPORT
+alias vscode="code"             # launch VSCode with command 'code'
 # 
 [ "$MAVEN_HOME" ] && \
     alias mvn="$MAVEN_HOME/bin/mvn $mvn_mono"   # -B: color off
@@ -166,15 +167,43 @@ function crlf() {   # list text files with CR/LF (Windows) line endings
 # set up git aliases, if git is installed
 [ "${PX[has-git]}" ] && \
     alias gt="git status" && \
-    alias co="git checkout" && \
     alias switch="git switch" && \
     alias log="git log --oneline" && \
     alias br="git branch -avv" && \
     alias prune="git reflog expire --expire=now --all; git gc --prune=now --aggressive" && \
     alias gar="[ -d .git ] && tar cvf \$(date '+%y-%m%d-git.tar') .git || echo 'no .git directory'" && \
-    alias gls="git show --name-status"
+    \
+    function merge() {
+        local sopt="\\\\\n\t\t--strategy-option"
+        local args=()
+        # 
+        for arg in $@; do case "$arg" in
+        --pull|--fetch) [ "$arg" == "--fetch" ] && local fetch=true ;;
+        --theirs|--ours) [ "$arg" == "--ours" ] && local ourthrs="$sopt ours" || local ourthrs="$sopt theirs" ;;
+        --show) local show=true ;;
+        *) args+=($arg) ;;
+        esac done
+        for arg in ${args[@]}; do
+            [ "$branch" ] && local remote="$branch" && local branch="$arg" || local branch="$arg"
+        done
+        if [ "$remote" ]; then
+            [ "$fetch" ] && \
+                local cmd="git fetch $remote $branch\ngit merge $remote/$branch --squash --allow-unrelated-histories $ourthrs" || \
+                local cmd="git pull  $remote $branch --squash --allow-unrelated-histories $ourthrs"
+        else
+            if [ "$branch" ]; then
+                local cmd="git merge $branch --squash"
+            else
+                echo -e "merge <remote> <branch> [--show|--pull (default)|--fetch|--ours|--theirs]\n";
+                merge --show --fetch "<remote>" "<branch>"; echo;
+                merge --show "<remote>" "<branch>"
+            fi
+        fi
+        [ "$show" ] && echo -e $cmd
+    }
 
-function source() { # source .env file in project directory or ~/.bashrc
+# source .env file if found in project directory or else source ~/.bashrc
+function source() {
     [ "$1" ] && builtin source "$1" \
         || \
         for env_dir in . .env env ~; do
@@ -187,7 +216,8 @@ function source() { # source .env file in project directory or ~/.bashrc
         done
 }
 
-# run bash setup script, need 'cd .' to set prompt in sub-shell
+
+# run bash setup script, 'cd .' needed to set prompt in sub-shell
 setup_bash "$1" && \
     cd . && \
     unset -f setup_bash

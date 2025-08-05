@@ -1,7 +1,9 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # extension to .bashrc to set the PATH environment variable and commands
 # @params:
 #  - $1: 'LOGIN' passed when .bashrc runs on opening a terminal, otherwise
 #        .bashrc runs for a sub-shell that inherits exported variables
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 
 [ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log script execution
 
@@ -36,24 +38,33 @@ if [ "$HOSTNAME" = "X1-Carbon" ]; then
         export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
     fi
 
-    # startup function for eclipse assuming workspace in parent directory
+    # start VSCode in (default: current) directory
+    function code() {
+        [ "$1" ] && local project_path="$*" || local project_path="."
+        # pick up fully qualified path to code from PATH
+        local code_path="$(tr ':' '\n' <<< $PATH | grep Code)"
+        [ "$code_path" ] && "$code_path/code" "$project_path" || \
+            echo "'code' not on PATH"
+    }
+
+    # start eclipse IDE assuming workspace in parent directory
     function eclipse() {
         "/c/opt/eclipse/eclipse.exe" "-data .." "$*" >/dev/null 2>/dev/null &
     }
 
-    # startup function for StarUML, e.g. "staruml Customer.mdj"
+    # start StarUML, e.g. "staruml Customer.mdj"
     function staruml() {
         "/c/Program Files/StarUML/StarUML.exe" "$*" &
     }
 
-    # startup function for sublime, e.g. "sublime README.md"
+    # start sublime editor, e.g. "sublime README.md"
     function sublime() {
         "/c/opt/sublime/sublime_text.exe" "$*" &
     }
 
-    # startup function for Chrome with local file or directory, e.g. "chrome doc/index.html"
+    # start Chrome browser with local file or directory, e.g. "chrome doc/index.html"
     function chrome() {
-        [[ "$1" ]] && local path="$*" || local path="."
+        [ "$1" ] && local path="$*" || local path="."
         # convert to file-URL with absolute path, e.g. 'file://C:/svgr2/se1-bestellsystem/.env.sh'
         path=$(realpath "$path" | sed -e 's/^\/[a-zA-Z]/file:\/\U&:/')
         # 
