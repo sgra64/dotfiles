@@ -8,8 +8,8 @@
 -    name = Sven Graupner
 -    email = sgraupner@bht-berlin.de
 +# [user]
-+#     name = Sven Graupner
-+#     email = sgraupner@bht-berlin.de
++#     name = your-name
++#     email = your@email.com
  
  [core]
      ignorecase = true       # ignore upper/lower case in file names
