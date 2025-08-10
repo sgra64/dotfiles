@@ -13,3 +13,7 @@ git pull origin main
 # remove 'README.md' from HOME-directory
 git rm README.md
 git commit -m "remove README.md"
+
+# update .gitconfig with user.name, user.email
+git add .gitconfig
+git commit -m "update .gitconfig with user.name, user.email"
