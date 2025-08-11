@@ -19,8 +19,8 @@ if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
     # 
     # initialize PX[] array if cannot be loaded from px_file
     declare -gA PX
-    PX[LAPTOP-V50CGD0T]="X1-Carbon" # map hostname to alias HOSTNAME used in prompt
-    PX[X1-Carbon]="win-x1"          # map alias to 'ext' in '.profile-{ext}' for setting PATH
+    PX[LAPTOP-V50CGD0T]="X1-G4W10"  # map HOSTNAME to alias HOSTNAME used in prompt
+    PX[DESKTOP-7T2AG34]="X1-G4.11"  # X1 Carbon Laptop G4 HOSTNAME after Win11-upgrade Aug 2024/25
     # 
     PX[clean-envar]="true"          # clean environment variables
     PX[has-color]=""                # terminal has colors: true or false

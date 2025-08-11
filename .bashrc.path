@@ -7,7 +7,52 @@
 # 
 [ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log script execution
 
-if [ "$HOSTNAME" = "X1-Carbon" ]; then
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Configuration paths of X1-Carbon G4 Laptop after Win11 upgrade Aug-2024/25
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ "$HOSTNAME" = "X1-G4.11" ]; then
+    # 
+    if [ "$1" = "LOGIN" ]; then
+        # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')
+        export JAVA_HOME="/c/Program Files/Java/jdk-24"
+        export PATH="${PATH}:${JAVA_HOME}/bin"
+
+        # Maven repository and installation directories (for 'mvn' command)
+        export M2_HOME="$HOME/.m2"
+        export MAVEN_HOME="/c/opt/maven"
+        export PATH="${PATH}:${MAVEN_HOME}/bin"
+
+        # Python installation directory
+        export PYTHON_HOME="/c/Users/svgr/AppData/Local/Programs/Python/Python313"
+        export PATH="${PATH}:${PYTHON_HOME}"
+        export PATH="${PATH}:${PYTHON_HOME}/Scripts"
+
+        # Docker installation directory
+        export DOCKER_HOME="/c/Program Files/Docker/Docker"
+        export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
+
+        # Qt installation directory
+        # QT_HOME="/c/opt/Qt"
+        # export PATH="${PATH}:${QT_HOME}/Tools/mingw1310_64/bin"
+        # # export PATH="${QT_HOME}/Tools/mingw1310_64/bin:${PATH}"
+        # # export PATH="${PATH}:${QT_HOME}/6.8.2/mingw_64/bin"
+        # unset QT_HOME
+
+        export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
+    fi
+
+    # start sublime editor, e.g. "sublime README.md"
+    function sublime() {
+        "/c/Program Files/Sublime Text/sublime_text.exe" "$*" &
+    }
+fi
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Configuration paths of prior configuration of X1-Carbon G4 Win10 Laptop
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+if [ "$HOSTNAME" = "X1-G4W10" ]; then
     # 
     if [ "$1" = "LOGIN" ]; then
         # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')
@@ -38,7 +83,22 @@ if [ "$HOSTNAME" = "X1-Carbon" ]; then
         export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
     fi
 
-    # start VSCode in (default: current) directory
+    # start sublime editor, e.g. "sublime README.md"
+    function sublime() {
+        "/c/opt/sublime/sublime_text.exe" "$*" &
+    }
+fi
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Common functions for Windows installations
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 
+case "$HOSTNAME" in
+
+X1-G4W10|X1-G4.11)
+    # 
+    # start VSCode in (default: current) directory, extract path from $PATH
     function code() {
         [ "$1" ] && local project_path="$*" || local project_path="."
         # pick up fully qualified path to code from PATH
@@ -57,11 +117,6 @@ if [ "$HOSTNAME" = "X1-Carbon" ]; then
         "/c/Program Files/StarUML/StarUML.exe" "$*" &
     }
 
-    # start sublime editor, e.g. "sublime README.md"
-    function sublime() {
-        "/c/opt/sublime/sublime_text.exe" "$*" &
-    }
-
     # start Chrome browser with local file or directory, e.g. "chrome doc/index.html"
     function chrome() {
         [ "$1" ] && local path="$*" || local path="."
@@ -70,5 +125,5 @@ if [ "$HOSTNAME" = "X1-Carbon" ]; then
         # 
         "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" "$path" >/dev/null 2>/dev/null &
     }
-
-fi  # [ "$HOSTNAME" = "X1-Carbon" ]
+    ;;
+esac
