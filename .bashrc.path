@@ -24,7 +24,7 @@ if [ "$HOSTNAME" = "X1-G4.11" ]; then
         export PATH="${PATH}:${MAVEN_HOME}/bin"
 
         # Python installation directory
-        export PYTHON_HOME="/c/Users/svgr/AppData/Local/Programs/Python/Python313"
+        export PYTHON_HOME="${PX[APPDATA_CYG]}/../Local/Programs/Python/Python313"
         export PATH="${PATH}:${PYTHON_HOME}"
         export PATH="${PATH}:${PYTHON_HOME}/Scripts"
 
@@ -65,7 +65,7 @@ if [ "$HOSTNAME" = "X1-G4W10" ]; then
         export PATH="${PATH}:${MAVEN_HOME}/bin"
 
         # Python installation directory
-        export PYTHON_HOME="/c/Users/svgr2/AppData/Local/Programs/Python/Python312"
+        export PYTHON_HOME="${PX[APPDATA_CYG]}/../Local/Programs/Python/Python312"
         export PATH="${PATH}:${PYTHON_HOME}"
         export PATH="${PATH}:${PYTHON_HOME}/Scripts"
 
@@ -88,7 +88,6 @@ if [ "$HOSTNAME" = "X1-G4W10" ]; then
         "/c/opt/sublime/sublime_text.exe" "$*" &
     }
 fi
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Common functions for Windows installations
@@ -126,4 +125,5 @@ X1-G4W10|X1-G4.11)
         "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" "$path" >/dev/null 2>/dev/null &
     }
     ;;
+
 esac

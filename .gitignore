@@ -14,8 +14,12 @@
 !.bashrc.path
 # !.zprofile    # created as link to .profile
 !.bashrc
+!.bash_logout
 !.zshrc
 
 !.minttyrc
 !.vimrc
 !.tmux/
+
+!.vscode_global/
+.vscode_global/*.log

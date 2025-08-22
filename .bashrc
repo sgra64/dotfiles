@@ -1,10 +1,9 @@
 # .bashrc is executed when a new bash process is started.
 
 if [[ "$SHELL" =~ bash && "$PX_EXPORT" ]]; then
-    # import PX associative array into child-shell from the 'PX_EXPORT' variable, see brilliant advice at
+    # re-initialize PX[] associative array in sub-shell from the 'PX_EXPORT'
+    # variable, associative arrays are not exported to child processes, see
     # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
-    # 
-    # import PX associative array from PX_EXPORT in sub-shell to inherit properties
     # 
     declare -A PX="${PX_EXPORT#*=}"
 fi
@@ -12,7 +11,7 @@ fi
 [ "${PX[log]}" ] && echo -n " -> .bashrc"
 
 type shopt &>/dev/null && if [[ $? ]]; then
-    # check window size after each command and update values of LINES and COLUMNS
+    # test window size after each command and update values LINES and COLUMNS
     shopt -s checkwinsize
     # append to the history file, don't overwrite
     shopt -s histappend
@@ -37,7 +36,8 @@ function setup_bash() {
         [ "${PX[has-color]}" = true ] && color on || color off
     fi
     # 
-    # export PX associative array via 'PX_EXPORT' variable to pass to child-shell, brilliant advice from
+    # load PX[] associative array to 'PX_EXPORT' variable in order to pass to
+    # sub-shell, see
     # https://stackoverflow.com/questions/65341786/shell-script-pass-associative-array-to-another-shell-script
     [ -z "$PX_EXPORT" ] && \
         export PX_EXPORT="$(declare -p PX)"
@@ -215,7 +215,6 @@ function source() {
             done
         done
 }
-
 
 # run bash setup script, 'cd .' needed to set prompt in sub-shell
 setup_bash "$1" && \

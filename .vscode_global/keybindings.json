@@ -1,0 +1,9 @@
+// Place your key bindings in this file to override the defaults
+// - https://code.visualstudio.com/docs/getstarted/keybindings
+[{
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.terminal.toggleTerminal"
+}, {
+    "key": "ctrl+shift+b",
+    "command": "java.project.build"
+}]

@@ -32,6 +32,7 @@ if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
     PX[git-project-name]=""         # name of current git project or ""
     PX[bashrc-ext]=".bashrc.path"   # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
     PX[bashrc-px]=".bashrc.px"      # platform-specific file to store PX[], e.g. '.bashrc-win-x1.px'
+    PX[APPDATA_CYG]=""              # cygified APPDATA path
     # 
     PX[ps1-color]=""                # patterns for PS1 command line prompts
     PX[ps1-mono]=""
@@ -96,7 +97,7 @@ function setup_profile() {
                 # cannot unset strange var: 'ProgramFiles(x86)' 'CommonProgramFiles(x86)' '!::', '_'
                 [[ "$v" =~  (ProgramFiles.x86.|^!::$|^_$) ]] && continue
                 # keep these variables, PROFILEREAD is read-only with zsh and can't be unset
-                [[ "$v" =~ ^(START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
+                [[ "$v" =~ ^(APPDATA|START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
                     continue
                 remove+=($v)
             done
@@ -105,6 +106,7 @@ function setup_profile() {
         fi
         export USER="$(/usr/bin/id -un)"    # alt: USER=$(whoami)
         export LANG=$(/usr/bin/locale -uU)
+        [ "$APPDATA" -a -z "${PX[APPDATA_CYG]}" ] && PX[APPDATA_CYG]=$(cygpath "$APPDATA")
         # 
         # ignore Windows \r line ends, otherwise error: '\r': command not found in .bashrc
         (set -o igncr) 2>/dev/null && set -o igncr;
@@ -156,6 +158,39 @@ function setup_profile() {
     # unset coloring functions that are no longer needed
     [ "${PX[declared]}" = true ] && \
         unset -f ansi_code colorize_prompt colorize_ls_colors || unset px_file
+    # 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Sync two files. Copy f1->f2, if f1 has a newer modification time than f2, and
+    # vice versa f2->f1, if f2 has a newer modification time than f1. Create the
+    # complementary file if missing. Log sync operation if log file is specified.
+    # Usage:
+    # - sync_files file-1 file-2 [log-file]
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    function sync_files {
+        [ -f "$1" ] && local f1="$1"
+        [ -f "$2" ] && local f2="$2"
+        [ "$3" -a -d "$(dirname $3)" ] && local log="$3"
+        # 
+        if [ "$f1" -a "$f2" ]; then
+            # if 'f1' changed, sync to 'f2' (-nt - newer than, -ot older than)
+            [ "$f1" -nt "$f2" ] && local f1_f2=true
+            [ "$f2" -nt "$f1" ] && local f2_f1=true
+            # 
+        elif [ "$f1" -a -z "$f2" ]; then    # create f2, if missing
+            local f1_f2=true
+        elif [ "$f2" -a -z "$f1" ]; then    # create f1, if missing
+            local f2_f1=true
+        fi
+        if [ "$f1_f2" ]; then
+            # set timestamp of original file to target file
+            cp --preserve=timestamps "$f1" "$(dirname $2)"
+            [ "$log" ] && echo "$(date) synched: \"$f1\" -> \"$2\"" >> "$log"
+        # 
+        elif [ "$f2_f1" ]; then
+            cp --preserve=timestamps "$f2" "$(dirname $1)"
+            [ "$log" ] && echo "$(date) synched: \"$f2\" -> \"$1\"" >> "$log"
+        fi
+    }
     # 
     return 0
 }
@@ -385,6 +420,7 @@ if [ "${PX[declared]}" = true ]; then
 # 
 fi  # [ "${PX[declared]}" = true ]
 
+
 # invoke main setup() function (that invokes .bashrc) and remove after execution
 setup_profile && \
     unset -f setup_profile
@@ -393,3 +429,11 @@ setup_profile && \
 [ "$START_DIR" ] && \
     builtin cd "$START_DIR" || \
     builtin cd "$HOME"
+
+
+if [ "${PX[APPDATA_CYG]}" ]; then
+    # sync VSCode 'settings.json' between git-location and $APPDATA location, write log
+    # 'keybindings.json' and 'lanuch.json' are sync'ed in '.bash_logout'
+    sync_files "$HOME/.vscode_global/settings.json" "${PX[APPDATA_CYG]}/Code/User/settings.json" \
+        "$HOME/.vscode_global/settings_sync.log"
+fi
