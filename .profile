@@ -1,0 +1,439 @@
+# .profile is executed by the shell process when a new terminal is opened.
+# 
+
+# disable zsh from outputting ANSI escape characters in sub-processes after
+# prompts, e.g. in: wc $(find tmp -name '*.py') or colors="${colors:3}"
+trap "" DEBUG
+
+# extend PATH to find UNIX commands
+PATH="$PATH:/usr/bin:/bin:/usr/local/bin"
+
+# locate platform-specific .px file, e.g. '.bashrc-win-x1.px' to load PX[] values
+# [[ "$HOSTNAME" = "LAPTOP-V50CGD0T" && "$SHELL" =~ bash ]] && \
+#     px_file=".bashrc-win-x1.px" && [ -f "${HOME}/$px_file" ] || unset px_file
+# 
+[ -z "$px_file" ] && \
+    px_file=".bashrc.px" && [ -f "${HOME}/$px_file" ] || unset px_file
+
+if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
+    # 
+    # initialize PX[] array if cannot be loaded from px_file
+    declare -gA PX
+    PX[LAPTOP-V50CGD0T]="X1-G4W10"  # map HOSTNAME to alias HOSTNAME used in prompt
+    PX[DESKTOP-7T2AG34]="X1-G4.11"  # X1 Carbon Laptop G4 HOSTNAME after Win11-upgrade Aug 2024/25
+    # 
+    PX[clean-envar]="true"          # clean environment variables
+    PX[has-color]=""                # terminal has colors: true or false
+    PX[color]=""                    # current color setting: 'on' or 'off'
+    PX[term]=""                     # alternate TERM setting to color 'on' or 'off'
+    PX[has-git]=""                  # git is installed
+    PX[has-realpath]=""             # realpath command is present
+    PX[has-cygpath]=""              # cygpath command is present
+    PX[git-project-name]=""         # name of current git project or ""
+    PX[bashrc-ext]=".bashrc.path"   # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
+    PX[bashrc-px]=".bashrc.px"      # platform-specific file to store PX[], e.g. '.bashrc-win-x1.px'
+    PX[APPDATA_CYG]=""              # cygified APPDATA path
+    # 
+    PX[ps1-color]=""                # patterns for PS1 command line prompts
+    PX[ps1-mono]=""
+    PX[ps1-git-color]=""
+    PX[ps1-git-mono]=""
+    PX[ls-colors]=""                # settings for LS_COLORS environment variable
+    #                               # remove files from $HOME
+    PX[home-cleanup]=".bash_history .lesshst .zsh_history .cache .vim "
+    PX[declared]="true"             # mark PX as declared
+else
+    # load PX[] array from px_file
+    export PX_EXPORT="$(cat ${HOME}/$px_file)"
+    declare -A PX="${PX_EXPORT#*=}"
+    PX[declared]=""                 # mark PX as not declared
+    PX[color]=""                    # reset color to force setting in color() function
+fi
+
+PX[log]=""                          # set 'true' to enable logging
+
+if [ "${PX[log]}" ]; then           # log script execution
+    [ "${PX[declared]}" = true ] && echo "declared PX[]" || echo "loaded PX[] from $px_file"
+    [[ "$SHELL" =~ zsh ]] && echo -n ".zprofile -> .profile" || echo -n ".profile"
+fi
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# main setup() function to
+#  - set environment variables: PATH, USER, HOSTNAME, LANG, LS_COLORS
+#  - clear env from variables inherited from Windows (on Windows only)
+#  - invoke .bashrc for bash
+# \\
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function setup_profile() {
+    # 
+    # locating commands from existing PATH
+    local path_ext=""
+    for cmd in git realpath cygpath code powershell; do
+        p=$(which "$cmd" 2>/dev/null)
+        case "$p" in
+        */realpath)     PX[has-realpath]="true" ;;
+        */cygpath)      local has_cygpath="true" ;;
+        */git)          PX[has-git]="true"; path_ext+=":"$(/usr/bin/dirname "$p") ;;
+        */code)         path_ext+=":"$(/usr/bin/dirname "$p") ;;
+        */powershell)   path_ext+=":"$(/usr/bin/dirname "$p") ;;
+        esac
+    done
+    # 
+    export PATH=".:/usr/local/bin:/usr/bin:/bin""$path_ext"
+
+    [ "${PX[has-realpath]}" = "true" ] && \
+        export HOME=$(realpath "$HOME")
+
+    [ "$has_cygpath" = true -a "$START_DIR" ] && \
+        export START_DIR=$(cygpath "${START_DIR//\"/}")
+
+    # Windows: clean-up environment, 'OS' only exists on Windows
+    if [[ "$OS" && "$OS" =~ Windows ]]; then
+        if [ "${PX[clean-envar]}" = "true" ]; then
+            # remove environment variables inherited from Windows, except those in match patterns
+            local remove=()
+            for v in $(sed -e 's/=.*//' <<< $(env)); do
+                # cannot unset strange var: 'ProgramFiles(x86)' 'CommonProgramFiles(x86)' '!::', '_'
+                [[ "$v" =~  (ProgramFiles.x86.|^!::$|^_$) ]] && continue
+                # keep these variables, PROFILEREAD is read-only with zsh and can't be unset
+                [[ "$v" =~ ^(APPDATA|START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
+                    continue
+                remove+=($v)
+            done
+            # remove all other environment variables inherited from Windows
+            [[ ${#remove[@]} -gt 0 ]] && unset ${remove[@]}
+        fi
+        export USER="$(/usr/bin/id -un)"    # alt: USER=$(whoami)
+        export LANG=$(/usr/bin/locale -uU)
+        [ "$APPDATA" -a -z "${PX[APPDATA_CYG]}" ] && PX[APPDATA_CYG]=$(cygpath "$APPDATA")
+        # 
+        # ignore Windows \r line ends, otherwise error: '\r': command not found in .bashrc
+        (set -o igncr) 2>/dev/null && set -o igncr;
+        # 
+        # change Windows default code page (437) to UTF-8 (65001), see:
+        # https://superuser.com/questions/269818/change-default-code-page-of-windows-console-to-utf-8/269857#269857
+        $(cygpath ${SYSTEMROOT})/system32/chcp.com 65001 &>/dev/null
+    fi
+    # 
+    local host="$(hostname)"   # attempt to map 'hostname'
+    [ "$host" -a "${PX[$host]}" ] && host="${PX[$host]}"
+    # 
+    export HOSTNAME="$host"
+    [ -z "$LANG" ] && export LANG="en_US.UTF-8"
+    [ -z "$SHELL" ] && \
+        export SHELL="$(ps -p $$ | sed -e '/PID/d' -e 's/.* //g')"
+    # 
+    PX[term]="$TERM"    # save TERM to toggle with 'dumb' monochrome terminal
+    # 
+    # remove write permission for group and others (files are normally created
+    # with mode 777 become 755; files created with mode 666 become 644)
+    umask 022
+
+    # - - - - - - - - - - - -
+    case "$OSTYPE" in
+    cygwin) ;;  # Windows, cygwin emulator
+    msys)   ;;  # Windows, mingw emulator used for GitBash
+    linux*)
+            export LC_COLLATE="C"      # show dotfiles first and not merged for 'ls'-list (as WSL:Ubuntu does)
+            ;;
+    esac
+
+    # - - - - - - - - - - - -
+    [ "${PX[declared]}" = true ] && \
+        build_colors
+    # 
+    export LS_COLORS="${PX[ls-colors]}"
+
+    # avoid duplicate or empty (whitespaces) lines in history
+    # https://www.baeldung.com/linux/history-remove-avoid-duplicates
+    export HISTCONTROL=ignoreboth:erasedups
+    export HISTSIZE=999
+    export HISTFILESIZE=999
+
+    # bash does not run ~/.bashrc implicitely, hence source here
+    [[ "$SHELL" =~ bash && -f "${HOME}/.bashrc" ]] && \
+        builtin source "${HOME}/.bashrc" LOGIN
+    # 
+    # unset coloring functions that are no longer needed
+    [ "${PX[declared]}" = true ] && \
+        unset -f ansi_code colorize_prompt colorize_ls_colors || unset px_file
+    # 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # Sync two files. Copy f1->f2, if f1 has a newer modification time than f2, and
+    # vice versa f2->f1, if f2 has a newer modification time than f1. Create the
+    # complementary file if missing. Log sync operation if log file is specified.
+    # Usage:
+    # - sync_files file-1 file-2 [log-file]
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    function sync_files {
+        [ -f "$1" ] && local f1="$1"
+        [ -f "$2" ] && local f2="$2"
+        [ "$3" -a -d "$(dirname $3)" ] && local log="$3"
+        # 
+        if [ "$f1" -a "$f2" ]; then
+            # if 'f1' changed, sync to 'f2' (-nt - newer than, -ot older than)
+            [ "$f1" -nt "$f2" ] && local f1_f2=true
+            [ "$f2" -nt "$f1" ] && local f2_f1=true
+            # 
+        elif [ "$f1" -a -z "$f2" ]; then    # create f2, if missing
+            local f1_f2=true
+        elif [ "$f2" -a -z "$f1" ]; then    # create f1, if missing
+            local f2_f1=true
+        fi
+        if [ "$f1_f2" ]; then
+            # set timestamp of original file to target file
+            cp --preserve=timestamps "$f1" "$(dirname $2)"
+            [ "$log" ] && echo "$(date) synched: \"$f1\" -> \"$2\"" >> "$log"
+        # 
+        elif [ "$f2_f1" ]; then
+            cp --preserve=timestamps "$f2" "$(dirname $1)"
+            [ "$log" ] && echo "$(date) synched: \"$f2\" -> \"$1\"" >> "$log"
+        fi
+    }
+    # 
+    return 0
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# define coloring functions only when PX[] was declared (not loaded from .px file)
+# and coloring sequences (ANSI colors) need to be set up
+# 
+if [ "${PX[declared]}" = true ]; then
+    # 
+    function build_colors() {
+        case "$SHELL" in
+        *bash)
+            # GNU prompt control sequences for PS1 variable
+            # https://www.gnu.org/software/bash/manual/html_node/Controlling-the-Prompt.html
+            # 
+            # PS1='\[\e[32m\]\u@\h:\W> \[\e[0m\]'
+            # export PS1=$(echo -e '\033]0;${PWD}\n\033[32m${USER}@${HOSTNAME} \033[33m${PWD/${HOME}/\~}\033[0m\n$ ')
+            # export PS1_color=$(echo -e '\033[0m\! \033[32m${USER}@${HOSTNAME} \033[33m${PWD/${HOME}/\~}\033[0m\n$ ')
+            # export PS1_mono=$(echo -e '\! ${USER}@${HOSTNAME} ${PWD/${HOME}/\~}\n$ ')
+            # 
+            local reg_prompt=(
+                reset       '\\\\\\\\\ \n'          # '\\' + '\n'
+                green       '\! '                   # \! history number, \# command number
+                low-green   '\u@\047$HOSTNAME\047 ' # \u user, \h hostname
+                low-white   '(\D{%H:%M}) '          # time: (hh:mm)
+                yellow      '\w '                   # \w path relative to $HOME, \W only dirname
+                # yellow    '${PWD/${PRHOME}/\~} '
+                white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
+                white                               # color for typed command
+            )
+            local git_prompt=(
+                reset       '\\\\\\\\\ \n'          # '\\' + '\n'
+                green       '\! '                   # \! history number, \# command number
+                # low-green   '\u@\047$HOSTNAME\047 ' # \u user, \h hostname
+                # 
+                white       '['                     # show poject name in git-prompt
+                blue        '${PX[git-project-name]}'
+                white       '] '
+                # 
+                white       '['                     # show branch in git-prompt
+                purple      '$(git symbolic-ref --short HEAD 2>/dev/null)'
+                white       '] '
+                # 
+                red         '${PWD/${PRHOME}/\~} '  # path relative to project directory
+                white       '\n$ '                  # newline + '$' (may need to be \012, not \n)
+                white                               # color for typed command
+            )
+            PX[ps1-color]=$(colorize_prompt true "${reg_prompt[@]}")
+            PX[ps1-mono]=$(colorize_prompt false "${reg_prompt[@]}")
+            PX[ps1-git-color]=$(colorize_prompt true "${git_prompt[@]}")
+            PX[ps1-git-mono]=$(colorize_prompt false "${git_prompt[@]}")
+            ;;
+
+        *zsh)
+            # Building a custom zsh prompt from scratch
+            # https://amitosh.medium.com/building-a-custom-zsh-prompt-from-scratch-3ff9fcbad67e
+            # https://zsh.sourceforge.io/Doc/Release/Prompt-Expansion.html
+            # 
+            # export PROMPT=$(echo -e '\033[32m%n@%m \033[33m%~\033[0m\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
+            # export PROMPT=$(echo -e '%n@%m %~\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
+            # export PS1_color=$(echo -e '%h %# \033[32m%n@%m \033[33m%~\033[0m\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
+            # export PS1_mono=$(echo -e '%h %n@%m %~\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
+            # 
+            export HOST="$HOSTNAME"                 # zsh prompt '%m' refers to 'HOST'
+            local reg_prompt=(
+                # reset       '\\\\\ \\n'           # '\\' + '\n'
+                reset       '-- \n'                 # '--' + '\n'
+                blue        '(%h) '                 # (history number)
+                blue        '%n@\047%m\047 '        # user@'host'
+                low-white   '(%D{%K:%M}) '          # time: (hh:mm)
+                yellow      '%~'                    # path relative to $HOME
+                white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
+                white                               # color for typed command
+            )
+            local git_prompt=(
+                reset       '-- \n'                 # '--' + '\n'
+                green       '%h '                   # (history number)
+                # 
+                white       '['                     # show poject name in git-prompt
+                # blue        '$(echo -e "\e[1;34m"${PX[git-project-name]})'
+                blue        '${PX[git-project-name]}'
+                white       '] '
+                # 
+                white       '['                     # show branch in git-prompt
+                # remove ANSI reset seq "\e[0m" injected by zsh in front of 'branch' variable in $(git ...) execution
+                purple      '$(branch=$(git symbolic-ref --short HEAD 2>/dev/null); echo -e "\e[1;35m${branch#*[a-zA-Z]}")'
+                white       '] '
+                # 
+                # red         '%~'                  # path relative to $HOME
+                red         '$(echo -e "\e[1;31m"${PWD/${PRHOME}/\~}) '  # path relative to project directory
+                white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
+                white                               # color for typed command
+            )
+            PX[ps1-color]=$(colorize_prompt true "${reg_prompt[@]}")
+            PX[ps1-mono]=$(colorize_prompt false "${reg_prompt[@]}")
+            PX[ps1-git-color]=$(colorize_prompt true "${git_prompt[@]}")
+            PX[ps1-git-mono]=$(colorize_prompt false "${git_prompt[@]}")
+            ;;
+        esac
+
+        PX[ls-colors]=$(colorize_ls_colors \
+            "di"    bright-white \
+            "ow"    white \
+            "fi"    low-white \
+            "ex"    red \
+            "ln"    blue \
+            "or"    blue \
+            "mi"    broken-link \
+            "*.zip" low-cyan \
+            "*.tar" low-cyan \
+            "*.jar" low-cyan \
+        )
+    }
+
+    function ansi_code() {
+        local code="$1"; local text="$2";
+        [[ "$SHELL" =~ zsh ]] && \
+            local reset="\e[0m" || \
+            local reset="\[\e[0m\]"     # alternatively: "\[\e[0m\]", "\[\033[0m\]"
+        # 
+        case "$code" in
+        "reset")    printf "%s%s" "$reset" "$text" ;;   # echo -e "$reset""$text" ;;
+        "0")        printf "0" ;;                       # echo -e "0" ;;
+        *)          local esc="${ANSI_COLORS[$code]}"
+                    [ "$text" = "--unterminated" ] && text="" && reset=""
+                    # [ "$esc" ] && printf "\[\e[%sm\]%s%s" "$esc" "$text" "$reset" ;;
+                    if [ "$esc" ]; then
+                        [[ "$SHELL" =~ zsh ]] && \
+                            echo -e "\e["$esc"m""$text""$reset" || \
+                            echo -e "\[\e["$esc"m\]""$text""$reset"
+                    fi ;;
+        esac
+    }
+
+    function colorize_prompt() {
+        # arg1 tells to set color (true) or not (false)
+        local s=0; local code=""; local e=""
+        for k in "$@"; do
+            [ "$s" = 0 -a "$k" = false ] && s=10 && continue
+            [ "$s" = 0 -a "$k" = true ] && s=20 && continue
+            # 
+            # monochrome prompt
+            [ "$s" = 10 ] && s=11 && continue
+            [ "$s" = 11 ] && s=10 && e+="$k" && continue
+            # 
+            # colored prompt
+            [ "$s" = 20 ] && s=21 && code="$k" && continue
+            [ "$s" = 21 ] && s=20 && \
+                e+=$(ansi_code "$code" "$k") && \
+                code="" && continue
+        done;
+        # 
+        # append unterminated color code (no '\[\e[0m\]' after text) for colored typing commands
+        [ "$1" = true ] && [ "$code" ] && e+=$(ansi_code "$code" "--unterminated")
+        # 
+        echo -e "$e"    # printf "%s" "$e"  # output sequence for prompt (must quote "$e")
+    }
+
+    function colorize_ls_colors() {
+        local s=0; local e=""
+        for k in "$@"; do
+            [ "$s" = 1 ] && e+="${ANSI_COLORS[$k]}" && s=2
+            [ "$s" = 0 ] && e+="$k=" && s=1
+            [ "$s" = 2 ] && e+=":" && s=0
+        done;
+        echo -e "$e"    # printf "%s" "$e"  # output sequence for LS_COLORS (must quote "$e")
+    }
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    # ANSI terminal control sequences for colors:
+    # - https://en.wikipedia.org/wiki/ANSI_escape_code
+    # - https://askubuntu.com/questions/466198/how-do-i-change-the-color-for-directories-with-ls-in-the-console
+    # - https://www.howtogeek.com/307701/how-to-customize-and-colorize-your-bash-prompt
+    # 
+    # remove ansi color codes from output
+    # - https://stackoverflow.com/questions/32166976/how-to-remove-the-decorate-colors-characters-in-bash-output
+    # - https://stackoverflow.com/questions/19296667/remove-ansi-color-codes-from-a-text-file-using-bash
+    # - sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g"
+    # 
+    declare -gA ANSI_COLORS=(
+        ["black"]="1;30"
+        ["dimmed-grey"]="2;30"  ["dimmed-red"]="2;31"   ["dimmed-green"]="2;32"
+        ["dimmed-yellow"]="2;33" ["dimmed-blue"]="2;34" ["dimmed-purple"]="2;35"
+        ["dimmed-cyan"]="2;36"  ["dimmed-white"]="2;37"
+
+        ["grey"]="1;30"         ["red"]="1;31"          ["green"]="1;32"
+        ["yellow"]="1;33"       ["blue"]="1;34"         ["purple"]="1;35"
+        ["cyan"]="1;36"         ["white"]="1;37"
+
+        ["low-grey"]="0;30"     ["low-red"]="0;31"      ["low-green"]="0;32"
+        ["low-yellow"]="0;33"   ["low-blue"]="0;34"     ["low-purple"]="0;35"
+        ["low-cyan"]="0;36"     ["low-white"]="0;37"    # ["low-white"]="0;37;1"
+
+        ["bright-grey"]="1;90"  ["bright-red"]="1;91"   ["bright-green"]="1;92"
+        ["bright-yellow"]="1;93" ["bright-blue"]="1;94" ["bright-purple"]="1;95"
+        ["bright-cyan"]="1;96"  # turquoise
+        ["bright-white"]="1;97" # boldish bright white
+        ["light-red-bg"]="1;101"
+
+        ["broken-link"]="1;4;37;41" # used for broken links (white on red background)
+    )
+    # 
+    # https://stackoverflow.com/questions/6159856/how-do-zsh-ansi-colour-codes-work
+    # for COLOR in {0..255}; do
+    #     for STYLE in "38;5"; do 
+    #         TAG="\033[${STYLE};${COLOR}m"
+    #         STR="${STYLE};${COLOR}"
+    #         echo -ne "${TAG}${STR}${NONE}  "
+    #     done
+    #     echo
+    # done
+    # 
+    # further control sequences for ANSI terminal:
+    # - Put the cursor at line L and column C \033[<L>;<C>H
+    # - Put the cursor at line L and column C \033[<L>;<C>f
+    # - Move the cursor up N lines            \033[<N>A
+    # - Move the cursor down N lines          \033[<N>B
+    # - Move the cursor forward N columns     \033[<N>C
+    # - Move the cursor backward N columns    \033[<N>D
+    # - Clear the screen, move to (0,0)       \033[2J
+    # - Erase to end of line                  \033[K
+    # - Save cursor position                  \033[s
+    # - Restore cursor position               \033[u
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 
+fi  # [ "${PX[declared]}" = true ]
+
+
+# invoke main setup() function (that invokes .bashrc) and remove after execution
+setup_profile && \
+    unset -f setup_profile
+
+# cd to START_DIR if terminal was opened from a context menu on a particular folder
+[ "$START_DIR" ] && \
+    builtin cd "$START_DIR" || \
+    builtin cd "$HOME"
+
+
+if [ "${PX[APPDATA_CYG]}" ]; then
+    # sync VSCode 'settings.json' between git-location and $APPDATA location, write log
+    # 'keybindings.json' and 'lanuch.json' are sync'ed in '.bash_logout'
+    sync_files "$HOME/.vscode_global/settings.json" "${PX[APPDATA_CYG]}/Code/User/settings.json" \
+        "$HOME/.vscode_global/settings_sync.log"
+fi
