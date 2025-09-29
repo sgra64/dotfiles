@@ -1,7 +1,15 @@
+#!/bin/bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Build a release with no history on main-branch:
 # - f7c2c33 (HEAD -> main, origin/main) dotfiles RELEASE-1.2.2, Aug-05-2025
 # - c5ec468 (tag: root) root commit (empty)
+# 
+# Steps:
+#  1. push update to remote 'dev'-branch
+#  2. on local build branch, update message in 'release.txt'
+#  3. run build-script:
+#     - eval build-release-on-main.sh --push
+#     build-script will build new release on 'main'-branch and push to remote
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function build_release_on_main() {
     git switch main
@@ -43,38 +51,5 @@ function build_release_on_main() {
     fi
 }
 
-# execute build-function ("$@" keeps separate arguments, "$*" creates a single string)
-build_release_on_main "$@"
-
-
-# function probe() {
-#     cd dev
-#     echo "in dev:"
-#     git diff home-dev/dev --name-status
-#     git diff origin/dev --name-status
-#     cd ..
-# }
-# function update_local_dev() {
-#     [ "$1" ] && local sub_div="$1" || sub_div="dev"
-#     [ -d "$sub_div" ] && local cd_back=$(pwd) && builtin cd "$sub_div"
-#     git pull home-dev dev
-#     git push origin dev
-#     [ "$cd_back" ] && builtin cd "$cd_back"
-# }
-# function build_release_on_main() {
-#     [ "$1" ] && local sub_div="$1" || sub_div="main"
-#     [ -d "$sub_div" ] && local cd_back=$(pwd) && builtin cd "$sub_div
-#     git reset --hard root
-#     git pull --squash local-dev dev
-#     git commit -m "${PX[release-commit-msg]}"
-#     git push -f origin main
-#     [ "$cd_back" ] && builtin cd "$cd_back"
-# }
-# 
-# git clone -b main --single-branch git@github.com:sgra64/dotfiles.git main
-# cd main
-# git remote add local-dev ../dev
-# 
-# git clone -b dev --single-branch git@github.com:sgra64/dotfiles.git dev
-# cd dev; git remote add home-dev $HOME
-# 
+# execute build-function ($@ keeps separate arguments, "$*" creates a single string)
+build_release_on_main $@
