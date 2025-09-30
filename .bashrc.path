@@ -1,16 +1,19 @@
+#!/bin/bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# extension to .bashrc to set the PATH environment variable and commands
+# Extension sourced by .bashrc to customize application-specific environment,
+# mainly by extending the PATH variable.
+# \\
 # @params:
 #  - $1: 'LOGIN' passed when .bashrc runs on opening a terminal, otherwise
 #        .bashrc runs for a sub-shell that inherits exported variables
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 
-[ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log script execution
+[ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log, if enabled
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Configuration paths of X1-Carbon G4 Laptop after Win11 upgrade Aug-2024/25
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PATH for X1-Carbon G4 Laptop after Win11 upgrade Aug-2024/25
+# \\
 if [ "$HOSTNAME" = "X1-G4.11" ]; then
     # 
     if [ "$1" = "LOGIN" ]; then
@@ -50,8 +53,8 @@ fi
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Configuration paths of prior configuration of X1-Carbon G4 Win10 Laptop
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PATH of prior configuration of X1-Carbon G4 Win10 Laptop
+# \\
 if [ "$HOSTNAME" = "X1-G4W10" ]; then
     # 
     if [ "$1" = "LOGIN" ]; then
@@ -91,8 +94,7 @@ fi
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Common functions for Windows installations
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 
+# \\
 case "$HOSTNAME" in
 
 X1-G4W10|X1-G4.11)
@@ -100,9 +102,11 @@ X1-G4W10|X1-G4.11)
     # start VSCode in (default: current) directory, extract path from $PATH
     function code() {
         [ "$1" ] && local project_path="$*" || local project_path="."
-        # pick up fully qualified path to code from PATH
-        local code_path="$(tr ':' '\n' <<< $PATH | grep Code)"
-        [ "$code_path" ] && "$code_path/code" "$project_path" || \
+        # get full path to avoid collission with function name code()
+        local code_path="$(tr ':' '\n' <<< $PATH | grep -i Code)"
+        # has no effect: --user-data-dir "$APPDATA\\Code" to avoid GitLense
+        # extension polluting $HOME with .gk and AppData directories
+        [ "$code_path" ] && "$code_path/code" "$project_path" ||
             echo "'code' not on PATH"
     }
 

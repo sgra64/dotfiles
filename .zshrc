@@ -1,9 +1,13 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # .zshrc is executed when a new zsh process is started.
+# \\
+# This .zshrc invokes .bashrc used by bash in order to define settings.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 
+[ "${PX[log]}" ] && echo -n " -> .zshrc"    # log, if enabled
 
-[ "${PX[log]}" ] && echo -n " -> .zshrc"
-
-# source color control functions for ANSI terminals
-[ -f "$HOME/.bashrc" ] && \
+# source .bashrc
+[ -f "$HOME/.bashrc" ] &&
     source "$HOME/.bashrc" LOGIN
 
 # autoload -Uz compinit

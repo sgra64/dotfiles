@@ -1,11 +1,17 @@
-# .bash_logout is executed when login bash process is terminated.
+#!/bin/bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# .bash_logout is executed when login bash process is terminated, not at the
+# end of shell sub-processes.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 
 
-if [ "${PX[APPDATA_CYG]}" ]; then
-    # 
-    # sync VSCode 'settings.json', 'keybindings.json' and 'launch.json' between
-    # git-location and $APPDATA location, write logs
+# sync VSCode 'settings.json', 'keybindings.json' and 'launch.json' between
+# git-location and $APPDATA location at .bash_logout at the end of session
+[ "${PX[APPDATA_CYG]}" ] &&
     for f in settings keybindings launch; do
-        sync_files "$HOME/.vscode_global/$f.json" "${PX[APPDATA_CYG]}/Code/User/$f.json" \
-            "$HOME/.vscode_global/${f}_sync.log"
+        sync_files  "$HOME/.vscode_global/$f.json" "${PX[APPDATA_CYG]}/Code/User/$f.json" \
+            "$HOME/.vscode_global/sync_logs/${f}_sync.log"
     done
-fi
+
+# reset history
+rm -f .bash_history .zsh_history && history -c

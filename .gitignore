@@ -22,4 +22,5 @@
 !.tmux/
 
 !.vscode_global/
-.vscode_global/*.log
+# .vscode_global/sync_logs/*.log
+**.log

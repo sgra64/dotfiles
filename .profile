@@ -1,103 +1,94 @@
-# .profile is executed by the shell process when a new terminal is opened.
+#!/bin/bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# .profile is executed by the bash shell process when a new terminal is opened.
+# It is not executed by bash sub-processes. Counterpart is .bash_logout that
+# is executed when the terminal session is closed.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # 
-
-# disable zsh from outputting ANSI escape characters in sub-processes after
-# prompts, e.g. in: wc $(find tmp -name '*.py') or colors="${colors:3}"
-trap "" DEBUG
-
-# extend PATH to find UNIX commands
+# extend PATH to find UNIX commands such as 'hostname'
 PATH="$PATH:/usr/bin:/bin:/usr/local/bin"
 
-# locate platform-specific .px file, e.g. '.bashrc-win-x1.px' to load PX[] values
-# [[ "$HOSTNAME" = "LAPTOP-V50CGD0T" && "$SHELL" =~ bash ]] && \
-#     px_file=".bashrc-win-x1.px" && [ -f "${HOME}/$px_file" ] || unset px_file
-# 
-[ -z "$px_file" ] && \
-    px_file=".bashrc.px" && [ -f "${HOME}/$px_file" ] || unset px_file
+# map custom hostnames
+[ -z "$HOSTNAME" ] && host=$(hostname) || host="$HOSTNAME"
+case "$host" in
+    LAPTOP-V50CGD0T) host="X1-G4W10" ;;     # map HOSTNAME to alias HOSTNAME used in prompt
+    DESKTOP-7T2AG34) host="X1-G4.11" ;;     # X1 Carbon Laptop after Win11-upgrade Aug 2024/25
+esac
+[ -z "$HOSTNAME" -o "$host" != "$HOSTNAME" ] && export HOSTNAME="$host"
 
-if [[ -z "$px_file" || "$SHELL" =~ zsh ]]; then
-    # 
-    # initialize PX[] array if cannot be loaded from px_file
+# locate .bashrc.px[.$HOSTNAME] file with cached PX[] array settings (not cached for zsh)
+[ -z "$HOME" ] && export HOME="."; pxfile="$HOME/.bashrc.px.$host"
+[ ! -f "$pxfile" ] && pxfile="$HOME/.bashrc.px" && [ ! -f "$pxfile" ] && pxfile=""
+# 
+# load PX[] array from $pxfile cache for faster start-up or initialize if no $pxfile is present
+if [ "$pxfile" -a -z "$ZSH" ]; then
+    export PX_EXPORT="$(cat $pxfile)"   # export to unpack PX[] in sub-processes
+    declare -A PX="${PX_EXPORT#*=}"
+    PX[declared]=""                     # mark PX as not declared
+    PX[color]=""                        # reset color to force setting in color() function
+else
     declare -gA PX
-    PX[LAPTOP-V50CGD0T]="X1-G4W10"  # map HOSTNAME to alias HOSTNAME used in prompt
-    PX[DESKTOP-7T2AG34]="X1-G4.11"  # X1 Carbon Laptop G4 HOSTNAME after Win11-upgrade Aug 2024/25
+    PX[clean-envar]="true"              # clean-up environment variables inherited on Windows
+    PX[has-color]=""                    # terminal has colors: true or false
+    PX[color]=""                        # current color setting: 'on' or 'off'
+    PX[term]=""                         # alternate TERM setting to color 'on' or 'off'
+    PX[has-git]=""                      # git is installed
+    PX[has-realpath]=""                 # realpath command is present
+    PX[has-cygpath]=""                  # cygpath command is present
+    PX[git-project-name]=""             # name of current git project or ""
+    PX[bashrc-ext]=".bashrc.path"       # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
+    PX[bashrc-px]=".bashrc.px"          # platform-specific file to store PX[], e.g. '.bashrc-win-x1.px'
+    PX[APPDATA_CYG]=""                  # cygified APPDATA path
     # 
-    PX[clean-envar]="true"          # clean environment variables
-    PX[has-color]=""                # terminal has colors: true or false
-    PX[color]=""                    # current color setting: 'on' or 'off'
-    PX[term]=""                     # alternate TERM setting to color 'on' or 'off'
-    PX[has-git]=""                  # git is installed
-    PX[has-realpath]=""             # realpath command is present
-    PX[has-cygpath]=""              # cygpath command is present
-    PX[git-project-name]=""         # name of current git project or ""
-    PX[bashrc-ext]=".bashrc.path"   # platform-specific .bashrc extension file, e.g. '.bashrc-win-x1'
-    PX[bashrc-px]=".bashrc.px"      # platform-specific file to store PX[], e.g. '.bashrc-win-x1.px'
-    PX[APPDATA_CYG]=""              # cygified APPDATA path
-    # 
-    PX[ps1-color]=""                # patterns for PS1 command line prompts
+    PX[ps1-color]=""                    # patterns for PS1 command line prompts
     PX[ps1-mono]=""
     PX[ps1-git-color]=""
     PX[ps1-git-mono]=""
-    PX[ls-colors]=""                # settings for LS_COLORS environment variable
-    #                               # remove files from $HOME
-    PX[home-cleanup]=".bash_history .lesshst .zsh_history .cache .vim "
-    PX[declared]="true"             # mark PX as declared
-else
-    # load PX[] array from px_file
-    export PX_EXPORT="$(cat ${HOME}/$px_file)"
-    declare -A PX="${PX_EXPORT#*=}"
-    PX[declared]=""                 # mark PX as not declared
-    PX[color]=""                    # reset color to force setting in color() function
+    PX[ls-colors]=""                    # settings for LS_COLORS environment variable
+    #                                   # remove files from $HOME
+    PX[declared]="true"                 # mark PX as declared
 fi
 
-PX[log]=""                          # set 'true' to enable logging
-
-if [ "${PX[log]}" ]; then           # log script execution
-    [ "${PX[declared]}" = true ] && echo "declared PX[]" || echo "loaded PX[] from $px_file"
-    [[ "$SHELL" =~ zsh ]] && echo -n ".zprofile -> .profile" || echo -n ".profile"
+PX[log]=""                              # set 'true' to enable logging
+# 
+if [ "${PX[log]}" ]; then               # log script execution
+    [ "${PX[declared]}" ] && echo "declared PX[]" || echo "loaded PX[] from $pxfile"
+    [ "$ZSH" ] && echo -n ".zprofile -> .profile" || echo -n ".profile"
 fi
-
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# main setup() function to
-#  - set environment variables: PATH, USER, HOSTNAME, LANG, LS_COLORS
+# profile() function
+#  - set environment variables: PATH, USER, LANG, SHELL, START_DIR, LS_COLORS
+#    LC_COLLATE, HISTORYCONTROL, HISTORYSIZE, HISTORYFILESIZE, LESSHISTFILE
 #  - clear env from variables inherited from Windows (on Windows only)
 #  - invoke .bashrc for bash
 # \\
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function setup_profile() {
+function profile() {
     # 
-    # locating commands from existing PATH
+    # locate commands from prior PATH and append to Unix PATH
     local path_ext=""
     for cmd in git realpath cygpath code powershell; do
         p=$(which "$cmd" 2>/dev/null)
         case "$p" in
         */realpath)     PX[has-realpath]="true" ;;
-        */cygpath)      local has_cygpath="true" ;;
-        */git)          PX[has-git]="true"; path_ext+=":"$(/usr/bin/dirname "$p") ;;
-        */code)         path_ext+=":"$(/usr/bin/dirname "$p") ;;
-        */powershell)   path_ext+=":"$(/usr/bin/dirname "$p") ;;
+        */cygpath)      PX[has-cygpath]="true" ;;
+        */git)          PX[has-git]="true"; path_ext+=":"$(dirname "$p") ;;
+        */code)         path_ext+=":"$(dirname "$p") ;;
+        */powershell)   path_ext+=":"$(dirname "$p") ;;
         esac
-    done
-    # 
-    export PATH=".:/usr/local/bin:/usr/bin:/bin""$path_ext"
-
-    [ "${PX[has-realpath]}" = "true" ] && \
-        export HOME=$(realpath "$HOME")
-
-    [ "$has_cygpath" = true -a "$START_DIR" ] && \
-        export START_DIR=$(cygpath "${START_DIR//\"/}")
+    done; export PATH=".:/usr/local/bin:/usr/bin:/bin$path_ext"
 
     # Windows: clean-up environment, 'OS' only exists on Windows
     if [[ "$OS" && "$OS" =~ Windows ]]; then
-        if [ "${PX[clean-envar]}" = "true" ]; then
+        if [ "${PX[clean-envar]}" ]; then
             # remove environment variables inherited from Windows, except those in match patterns
             local remove=()
             for v in $(sed -e 's/=.*//' <<< $(env)); do
                 # cannot unset strange var: 'ProgramFiles(x86)' 'CommonProgramFiles(x86)' '!::', '_'
                 [[ "$v" =~  (ProgramFiles.x86.|^!::$|^_$) ]] && continue
                 # keep these variables, PROFILEREAD is read-only with zsh and can't be unset
-                [[ "$v" =~ ^(APPDATA|START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
+                [[ "$v" =~ ^(APPDATA|START_DIR|PATH|HOME|SHELL|TERM|OSTYPE|HOSTNAME|USERPROFILE|SYSTEMROOT|PROFILEREAD)$ ]] && \
                     continue
                 remove+=($v)
             done
@@ -115,14 +106,11 @@ function setup_profile() {
         # https://superuser.com/questions/269818/change-default-code-page-of-windows-console-to-utf-8/269857#269857
         $(cygpath ${SYSTEMROOT})/system32/chcp.com 65001 &>/dev/null
     fi
-    # 
-    local host="$(hostname)"   # attempt to map 'hostname'
-    [ "$host" -a "${PX[$host]}" ] && host="${PX[$host]}"
-    # 
-    export HOSTNAME="$host"
+
+    [ -z "$SHELL" ] && export SHELL="$(ps -p $$ | sed -e '/PID/d' -e 's/.* //g')"
+    [ "${PX[has-realpath]}" ] && export HOME=$(realpath "$HOME")
+    [ "${PX[has-cygpath]}" -a "$START_DIR" ] && export START_DIR=$(cygpath "${START_DIR//\"/}")
     [ -z "$LANG" ] && export LANG="en_US.UTF-8"
-    [ -z "$SHELL" ] && \
-        export SHELL="$(ps -p $$ | sed -e '/PID/d' -e 's/.* //g')"
     # 
     PX[term]="$TERM"    # save TERM to toggle with 'dumb' monochrome terminal
     # 
@@ -135,72 +123,38 @@ function setup_profile() {
     cygwin) ;;  # Windows, cygwin emulator
     msys)   ;;  # Windows, mingw emulator used for GitBash
     linux*)
-            export LC_COLLATE="C"      # show dotfiles first and not merged for 'ls'-list (as WSL:Ubuntu does)
-            ;;
+            # show dotfiles first and not merged for 'ls'-list (as WSL:Ubuntu does)
+            export LC_COLLATE="C" ;;
     esac
 
     # - - - - - - - - - - - -
-    [ "${PX[declared]}" = true ] && \
-        build_colors
-    # 
-    export LS_COLORS="${PX[ls-colors]}"
-
     # avoid duplicate or empty (whitespaces) lines in history
     # https://www.baeldung.com/linux/history-remove-avoid-duplicates
     export HISTCONTROL=ignoreboth:erasedups
     export HISTSIZE=999
     export HISTFILESIZE=999
+    export LESSHISTFILE=-           # supress creation of .lesshst file
 
-    # bash does not run ~/.bashrc implicitely, hence source here
-    [[ "$SHELL" =~ bash && -f "${HOME}/.bashrc" ]] && \
-        builtin source "${HOME}/.bashrc" LOGIN
+    # compute coloring sequences (ANSI colors) and store in PX[] when array
+    # was not loaded from cached .px file, remove coloring functions after
+    [ "${PX[declared]}" ] &&
+        build_colors &&
+        unset -f build_colors ansi_code colorize_prompt colorize_ls_colors
     # 
-    # unset coloring functions that are no longer needed
-    [ "${PX[declared]}" = true ] && \
-        unset -f ansi_code colorize_prompt colorize_ls_colors || unset px_file
-    # 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    # Sync two files. Copy f1->f2, if f1 has a newer modification time than f2, and
-    # vice versa f2->f1, if f2 has a newer modification time than f1. Create the
-    # complementary file if missing. Log sync operation if log file is specified.
-    # Usage:
-    # - sync_files file-1 file-2 [log-file]
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    function sync_files {
-        [ -f "$1" ] && local f1="$1"
-        [ -f "$2" ] && local f2="$2"
-        [ "$3" -a -d "$(dirname $3)" ] && local log="$3"
-        # 
-        if [ "$f1" -a "$f2" ]; then
-            # if 'f1' changed, sync to 'f2' (-nt - newer than, -ot older than)
-            [ "$f1" -nt "$f2" ] && local f1_f2=true
-            [ "$f2" -nt "$f1" ] && local f2_f1=true
-            # 
-        elif [ "$f1" -a -z "$f2" ]; then    # create f2, if missing
-            local f1_f2=true
-        elif [ "$f2" -a -z "$f1" ]; then    # create f1, if missing
-            local f2_f1=true
-        fi
-        if [ "$f1_f2" ]; then
-            # set timestamp of original file to target file
-            cp --preserve=timestamps "$f1" "$(dirname $2)"
-            [ "$log" ] && echo "$(date) synched: \"$f1\" -> \"$2\"" >> "$log"
-        # 
-        elif [ "$f2_f1" ]; then
-            cp --preserve=timestamps "$f2" "$(dirname $1)"
-            [ "$log" ] && echo "$(date) synched: \"$f2\" -> \"$1\"" >> "$log"
-        fi
-    }
+    export LS_COLORS="${PX[ls-colors]}"
+
+    # bash does not run ~/.bashrc implicitely, launch explicitely with LOGIN arg
+    [[ "$SHELL" =~ bash && -f "$HOME/.bashrc" ]] && \
+        builtin source "$HOME/.bashrc" LOGIN
     # 
     return 0
 }
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# define coloring functions only when PX[] was declared (not loaded from .px file)
-# and coloring sequences (ANSI colors) need to be set up
+# define coloring functions only when PX[] was not loaded from .px file and
+# coloring sequences (ANSI colors) need to be computed
 # 
-if [ "${PX[declared]}" = true ]; then
+if [ "${PX[declared]}" ]; then
     # 
     function build_colors() {
         case "$SHELL" in
@@ -256,7 +210,7 @@ if [ "${PX[declared]}" = true ]; then
             # export PS1_color=$(echo -e '%h %# \033[32m%n@%m \033[33m%~\033[0m\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
             # export PS1_mono=$(echo -e '%h %n@%m %~\n$ ')   # '%m %1d$ ' #'%n@%m %~$ '
             # 
-            export HOST="$HOSTNAME"                 # zsh prompt '%m' refers to 'HOST'
+            # export HOST="$HOSTNAME"                 # zsh prompt '%m' refers to 'HOST'
             local reg_prompt=(
                 # reset       '\\\\\ \\n'           # '\\' + '\n'
                 reset       '-- \n'                 # '--' + '\n'
@@ -265,7 +219,7 @@ if [ "${PX[declared]}" = true ]; then
                 low-white   '(%D{%K:%M}) '          # time: (hh:mm)
                 yellow      '%~'                    # path relative to $HOME
                 white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
-                white                               # color for typed command
+                reset       ''                      # reset coloring for typed line since trap has issues with sub-processes in zsh $(...)
             )
             local git_prompt=(
                 reset       '-- \n'                 # '--' + '\n'
@@ -278,13 +232,17 @@ if [ "${PX[declared]}" = true ]; then
                 # 
                 white       '['                     # show branch in git-prompt
                 # remove ANSI reset seq "\e[0m" injected by zsh in front of 'branch' variable in $(git ...) execution
-                purple      '$(branch=$(git symbolic-ref --short HEAD 2>/dev/null); echo -e "\e[1;35m${branch#*[a-zA-Z]}")'
+                # purple      '$(branch=$(git symbolic-ref --short HEAD 2>/dev/null); [ ${PX[color]} = "on" ] && echo -e -n "\e[1;35m"; echo -n "${branch#*[a-zA-Z]}")'
+                # purple      '$([ ${PX[color]} = "on" ] && trap "" DEBUG && echo -e -n "\e[1;35m"; git symbolic-ref --short HEAD 2>/dev/null)'
+                purple      '$([ ${PX[color]} = "on" ] && echo -e -n "\e[1;35m"; git symbolic-ref --short HEAD 2>/dev/null)'
                 white       '] '
                 # 
                 # red         '%~'                  # path relative to $HOME
-                red         '$(echo -e "\e[1;31m"${PWD/${PRHOME}/\~}) '  # path relative to project directory
+                # red         '${PWD/${PRHOME}/~}'  # path relative to project directory
+                # red         '$([ ${PX[color]} = "on" ] && trap "" DEBUG && echo -e -n "\e[1;31m"; echo "${PWD/${PRHOME}/~}")'
+                red         '$([ ${PX[color]} = "on" ] && echo -e -n "\e[1;31m"; echo "${PWD/${PRHOME}/~}")'
                 white       '\n-> '                 # newline + '->' (may need to be \012, not \n)
-                white                               # color for typed command
+                reset       ''                      # reset coloring for typed line since trap has issues with sub-processes in zsh $(...)
             )
             PX[ps1-color]=$(colorize_prompt true "${reg_prompt[@]}")
             PX[ps1-mono]=$(colorize_prompt false "${reg_prompt[@]}")
@@ -416,24 +374,59 @@ if [ "${PX[declared]}" = true ]; then
     # - Erase to end of line                  \033[K
     # - Save cursor position                  \033[s
     # - Restore cursor position               \033[u
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# 
-fi  # [ "${PX[declared]}" = true ]
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+fi
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Sync two files. Copy f1->f2, if f1 has a newer modification time than f2, and
+# vice versa f2->f1, if f2 has a newer modification time than f1. Create the
+# complementary file if missing. Log sync operation if log file is specified.
+# Usage:
+# - sync_files file-1 file-2 [log-file]
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function sync_files {
+    [ -f "$1" ] && local f1="$1"
+    [ -f "$2" ] && local f2="$2"
+    [ "$3" ] && local log_dir="$(dirname $3)" && mkdir -p "$log_dir" && local log="$3"
+    # 
+    if [ "$f1" -a "$f2" ]; then
+        # if 'f1' changed, sync to 'f2' (-nt - newer than, -ot older than)
+        [ "$f1" -nt "$f2" ] && local f1_f2=true
+        [ "$f2" -nt "$f1" ] && local f2_f1=true
+        # 
+    elif [ "$f1" -a -z "$f2" ]; then    # create f2, if missing
+        local f1_f2=true
+    elif [ "$f2" -a -z "$f1" ]; then    # create f1, if missing
+        local f2_f1=true
+    fi
+    if [ "$f1_f2" ]; then
+        # set timestamp of original file to target file
+        cp --preserve=timestamps "$f1" "$(dirname $2)"
+        [ "$log" ] && echo "$(date) synched: \"$f1\" -> \"$2\"" >> "$log"
+    # 
+    elif [ "$f2_f1" ]; then
+        cp --preserve=timestamps "$f2" "$(dirname $1)"
+        [ "$log" ] && echo "$(date) synched: \"$f2\" -> \"$1\"" >> "$log"
+    fi
+    # remove log directory if empty
+    [ "$log_dir" ] && [ ! "$(ls "$log_dir")" ] && rmdir "$log_dir"
+    return 0
+}
 
-# invoke main setup() function (that invokes .bashrc) and remove after execution
-setup_profile && \
-    unset -f setup_profile
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# run profile() function and remove after execution
+profile &&
+    unset host pxfile &&
+    unset -f profile
 
-# cd to START_DIR if terminal was opened from a context menu on a particular folder
-[ "$START_DIR" ] && \
-    builtin cd "$START_DIR" || \
+# cd to START_DIR if terminal was opened from a context menu or in a particular folder
+[ "$START_DIR" ] &&
+    builtin cd "$START_DIR" ||
     builtin cd "$HOME"
 
-
-if [ "${PX[APPDATA_CYG]}" ]; then
-    # sync VSCode 'settings.json' between git-location and $APPDATA location, write log
-    # 'keybindings.json' and 'lanuch.json' are sync'ed in '.bash_logout'
+# sync VSCode 'settings.json' between git-location and $APPDATA location with
+# .profile in every new terminal, also with .bash_logout at the end of session,
+# where also 'keybindings.json' and 'launch.json' are sync'ed
+[ "${PX[APPDATA_CYG]}" ] &&
     sync_files "$HOME/.vscode_global/settings.json" "${PX[APPDATA_CYG]}/Code/User/settings.json" \
-        "$HOME/.vscode_global/settings_sync.log"
-fi
+        "$HOME/.vscode_global/sync_logs/settings_sync.log"
