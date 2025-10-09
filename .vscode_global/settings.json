@@ -1,14 +1,24 @@
 //-----------------------------------------------------------------------------
-// System-wide VSCode settings located at:
-// - on Windows: %APPDATA%/Code/User/settings.json
-//               C:/Users/<user>/AppData/Roaming/Code/User/settings.json
-// - on Mac: ~/Library/Application\ Support/Code/User/settings.json
-//
+// VSCode commands:
+// - build: Ctrl-Shift-B
+// - run:   Ctrl-Alt-N
+// - clean Java Language Server Workspace: Ctrl-Shift-P
+// 
+// System-wide VSCode settings located on:
+// - Windows: %APPDATA%/Code/User/settings.json
+//            C:/Users/<user>/AppData/Roaming/Code/User/settings.json
+// - Mac:   $HOME/Library/Application\ Support/Code/User/settings.json
+// - Linux: $HOME/.config/Code/User/settings.json
+// 
 // VSCode project caches:
 // - on Windows: %APPDATA%/Code/User/workspaceStorage
 //               C:/Users/<user>/AppData/Roaming/Code/User/workspaceStorage
-// - on Mac: ~/Library/Application Support/Code/User/workspaceStorage
-//
+// - on Mac: $HOME/Library/Application\ Support/Code/User/workspaceStorage
+// 
+// VSCode installation paths:
+//  - Windows: %APPDATA%/Local/Programs/Microsoft\ VS\ Code/bin
+//  - MacOS:   /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin
+// 
 // Information about basic editing and Java settings:
 // - https://code.visualstudio.com/docs/editor/codebasics
 // - https://github.com/redhat-developer/vscode-java
