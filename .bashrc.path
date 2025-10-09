@@ -1,0 +1,133 @@
+#!/bin/bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Extension sourced by .bashrc to customize application-specific environment,
+# mainly by extending the PATH variable.
+# \\
+# @params:
+#  - $1: 'LOGIN' passed when .bashrc runs on opening a terminal, otherwise
+#        .bashrc runs for a sub-shell that inherits exported variables
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# 
+[ "${PX[log]}" ] && echo -n " -> .bashrc-paths"     # log, if enabled
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PATH for X1-Carbon G4 Laptop after Win11 upgrade Aug-2024/25
+# \\
+if [ "$HOSTNAME" = "X1-G4.11" ]; then
+    # 
+    if [ "$1" = "LOGIN" ]; then
+        # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')
+        export JAVA_HOME="/c/Program Files/Java/jdk-24"
+        export PATH="${PATH}:${JAVA_HOME}/bin"
+
+        # Maven repository and installation directories (for 'mvn' command)
+        export M2_HOME="$HOME/.m2"
+        export MAVEN_HOME="/c/opt/maven"
+        export PATH="${PATH}:${MAVEN_HOME}/bin"
+
+        # Python installation directory
+        export PYTHON_HOME="${PX[APPDATA_CYG]}/../Local/Programs/Python/Python313"
+        export PATH="${PATH}:${PYTHON_HOME}"
+        export PATH="${PATH}:${PYTHON_HOME}/Scripts"
+
+        # Docker installation directory
+        export DOCKER_HOME="/c/Program Files/Docker/Docker"
+        export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
+
+        # Qt installation directory
+        # QT_HOME="/c/opt/Qt"
+        # export PATH="${PATH}:${QT_HOME}/Tools/mingw1310_64/bin"
+        # # export PATH="${QT_HOME}/Tools/mingw1310_64/bin:${PATH}"
+        # # export PATH="${PATH}:${QT_HOME}/6.8.2/mingw_64/bin"
+        # unset QT_HOME
+
+        export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
+    fi
+
+    # start sublime editor, e.g. "sublime README.md"
+    function sublime() {
+        "/c/Program Files/Sublime Text/sublime_text.exe" "$*" &
+    }
+fi
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# PATH of prior configuration of X1-Carbon G4 Win10 Laptop
+# \\
+if [ "$HOSTNAME" = "X1-G4W10" ]; then
+    # 
+    if [ "$1" = "LOGIN" ]; then
+        # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')
+        export JAVA_HOME="/c/Program Files/Java/jdk-21"
+        export PATH="${PATH}:${JAVA_HOME}/bin"
+
+        # Maven repository and installation directories (for 'mvn' command)
+        export M2_HOME="$HOME/.m2"
+        export MAVEN_HOME="/c/opt/maven"
+        export PATH="${PATH}:${MAVEN_HOME}/bin"
+
+        # Python installation directory
+        export PYTHON_HOME="${PX[APPDATA_CYG]}/../Local/Programs/Python/Python312"
+        export PATH="${PATH}:${PYTHON_HOME}"
+        export PATH="${PATH}:${PYTHON_HOME}/Scripts"
+
+        # Docker installation directory
+        export DOCKER_HOME="/c/Program Files/Docker/Docker"
+        export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
+
+        # Qt installation directory
+        QT_HOME="/c/opt/Qt"
+        export PATH="${PATH}:${QT_HOME}/Tools/mingw1310_64/bin"
+        # export PATH="${QT_HOME}/Tools/mingw1310_64/bin:${PATH}"
+        # export PATH="${PATH}:${QT_HOME}/6.8.2/mingw_64/bin"
+        unset QT_HOME
+
+        export PATH="${PATH}:/c/WINDOWS:/c/WINDOWS/system32"
+    fi
+
+    # start sublime editor, e.g. "sublime README.md"
+    function sublime() {
+        "/c/opt/sublime/sublime_text.exe" "$*" &
+    }
+fi
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Common functions for Windows installations
+# \\
+case "$HOSTNAME" in
+
+X1-G4W10|X1-G4.11)
+    # 
+    # start VSCode in (default: current) directory, extract path from $PATH
+    function code() {
+        [ "$1" ] && local project_path="$*" || local project_path="."
+        # get full path to avoid collission with function name code()
+        local code_path="$(tr ':' '\n' <<< $PATH | grep -i Code)"
+        # has no effect: --user-data-dir "$APPDATA\\Code" to avoid GitLense
+        # extension polluting $HOME with .gk and AppData directories
+        [ "$code_path" ] && "$code_path/code" "$project_path" ||
+            echo "'code' not on PATH"
+    }
+
+    # start eclipse IDE assuming workspace in parent directory
+    function eclipse() {
+        "/c/opt/eclipse/eclipse.exe" "-data .." "$*" >/dev/null 2>/dev/null &
+    }
+
+    # start StarUML, e.g. "staruml Customer.mdj"
+    function staruml() {
+        "/c/Program Files/StarUML/StarUML.exe" "$*" &
+    }
+
+    # start Chrome browser with local file or directory, e.g. "chrome doc/index.html"
+    function chrome() {
+        [ "$1" ] && local path="$*" || local path="."
+        # convert to file-URL with absolute path, e.g. 'file://C:/svgr2/se1-bestellsystem/.env.sh'
+        path=$(realpath "$path" | sed -e 's/^\/[a-zA-Z]/file:\/\U&:/')
+        # 
+        "/c/Program Files (x86)/Google/Chrome/Application/chrome.exe" "$path" >/dev/null 2>/dev/null &
+    }
+    ;;
+
+esac

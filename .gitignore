@@ -1,0 +1,26 @@
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Patterns of file or directory names for git to ignore, see
+# https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# ignore everything (in $HOME)
+/*
+
+# except following files and directories
+!.gitignore
+!.gitconfig
+
+!.profile
+!.bashrc.path
+# !.zprofile    # created as link to .profile
+!.bashrc
+!.bash_logout
+!.zshrc
+
+!.minttyrc
+!.vimrc
+!.tmux/
+
+!.vscode_global/
+# .vscode_global/sync_logs/*.log
+**.log

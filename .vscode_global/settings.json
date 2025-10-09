@@ -1,0 +1,119 @@
+//-----------------------------------------------------------------------------
+// VSCode commands:
+// - build: Ctrl-Shift-B
+// - run:   Ctrl-Alt-N
+// - clean Java Language Server Workspace: Ctrl-Shift-P
+// 
+// System-wide VSCode settings located on:
+// - Windows: %APPDATA%/Code/User/settings.json
+//            C:/Users/<user>/AppData/Roaming/Code/User/settings.json
+// - Mac:   $HOME/Library/Application\ Support/Code/User/settings.json
+// - Linux: $HOME/.config/Code/User/settings.json
+// 
+// VSCode project caches:
+// - on Windows: %APPDATA%/Code/User/workspaceStorage
+//               C:/Users/<user>/AppData/Roaming/Code/User/workspaceStorage
+// - on Mac: $HOME/Library/Application\ Support/Code/User/workspaceStorage
+// 
+// VSCode installation paths:
+//  - Windows: %APPDATA%/Local/Programs/Microsoft\ VS\ Code/bin
+//  - MacOS:   /Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin
+// 
+// Information about basic editing and Java settings:
+// - https://code.visualstudio.com/docs/editor/codebasics
+// - https://github.com/redhat-developer/vscode-java
+//-----------------------------------------------------------------------------
+{
+    "explorer.confirmDelete": false,        // ask to comfirm file delete
+    "files.autoSave": "afterDelay",         // 'afterDelay' (1sec), 'onFocusChange', 'onWindowChange'
+    "files.autoSaveDelay": 800,
+    "files.eol": "\n",                      // use '\n' as default line ending
+    "files.associations": {                 // chose syntax highlighting by file endings
+        "*.rc": "shellscript",
+        "*.path": "shellscript"
+    },
+
+    // Editor settings
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,            // insert spaces for tabs
+    "editor.renderWhitespace": "all",       // show white spaces in editor as small dot
+    "editor.hover.enabled": true,           // show context when hovering
+    "editor.hover.delay": 1500,             // delay hover-time for context pop-ups (in ms)
+    "editor.minimap.enabled": false,        // show minimap for long files
+    "editor.inlayHints.enabled": "off",     // don't show argument names in method calls
+    // "editor.suggestSelection": "first",
+    // "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+
+    // Terminal settings, see https://code.visualstudio.com/docs/terminal/profiles
+    "terminal.integrated.defaultProfile.windows": "Bash",
+    "terminal.integrated.profiles.windows": {
+        "Bash": {
+          "path": ["bash"],
+          //"args": ["--init-file", "'${workspaceFolder}'/.vscode/launch_terminal.sh"],
+          "args": ["--init-file", "~/.profile"],
+          "icon": "terminal-bash",
+        },
+        "cmd.exe": {
+           "path": ["cmd.exe"],             // add 'cmd.exe' terminal
+        },
+        //"PowerShell": {
+        //    "path": "powershell",         // 'powershell.exe' terminal
+        //    // "args": ["-noexit", "-file", "${env:APPDATA}\\PowerShell\\custom-init.ps1"],
+        //    "args": ["-noexit"],
+        //},
+        "Git Bash": null,                   // remove other terminals from menu
+        "Command Prompt": null,
+        "JavaScript Debug Terminal": null,
+        "Ubuntu (WSL)": null,
+    },
+
+    // general Code Runner (extension) settings
+    "code-runner.defaultLanguage": "java",
+    "code-runner.showExecutionMessage": false,
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.executorMap": {
+        "python": "c:/Users/svgr2/AppData/Local/Programs/Python/Python312/python.exe",
+        "java": "java $fileNameWithoutExt",
+        // "c": "cd $dir && gcc $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+        // "cpp": "cd $dir && g++ -std=c++14 $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+        // "html": "\"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe\""
+    },
+
+    // general Java settings
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.debug.settings.onBuildFailureProceed": true,
+    "java.debug.settings.showHex": true,
+    // set 'java.home'
+    // "java.jdt.ls.java.home": "C:/Program Files/Java/jdk-21",
+    // "java.configuration.runtimes": [{
+    //     "name": "JavaSE-21",
+    //     // (mac) "path": "/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home",
+    //     // (mac) "path": "/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home",
+    //     // (Linux) "path": "/usr/lib/jvm/java-21-openjdk-amd64",
+    //     "path": "C:/Program Files/Java/jdk-21",
+    //     "javadoc": "https://docs.oracle.com/en/java/javase/21/docs/api",
+    //     "default": true
+    // }],
+    // "java.inlayHints.parameterNames.enabled": "none",
+    // "java.debug.settings.onBuildFailureProceed": true,
+    // // disable warnings for unused imports in Java in Visual Studio Code
+    // "java.compile.nullAnalysis.mode": "disabled",
+
+    // general Maven settings
+    "maven.executable.path": "C:/opt/maven/bin",
+    "maven.settingsFile": "",
+
+    // general Docker settings
+    "docker.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
+
+    // general Docker settings
+    "git.confirmSync": false,
+    // settings to answer questions asked by VSCode upon startup
+    "git.openRepositoryInParentFolders": "never",
+    "containers.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
+
+    // other general settings
+    // "security.workspace.trust.untrustedFiles": "open",
+    // "window.zoomLevel": 1,
+}
