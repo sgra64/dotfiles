@@ -1,53 +1,45 @@
 #!/bin/bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Build a release with no history on main-branch:
+# Build and push a release on the main-branch from the $build_branch sub-
+# directory:
 # - f7c2c33 (HEAD -> main, origin/main) dotfiles RELEASE-1.2.2, Aug-05-2025
 # - c5ec468 (tag: root) root commit (empty)
 # 
 # Steps:
 #  1. push update to remote 'dev'-branch
-#  2. on local build branch, update message in 'release.txt'
-#  3. run build-script:
+#  2. on the local build branch, update message in 'release.txt'
+#  3. run this build-script:
 #     - eval build-release-on-main.sh --push
-#     build-script will build new release on 'main'-branch and push to remote
+# The result is in the $build_branch sub-directory.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function build_release_on_main() {
-    git switch main
-    local branch=$(git rev-parse --abbrev-ref HEAD)
-    # 
-    if [ "$branch" = "main" ]; then
-        [ "$1" = "--push" ] && local push=true
-        # 
-        # set remote 'origin' if not present
-        [ -z "$(git remote -v | grep origin)" ] && \
-            git remote add origin git@github.com:sgra64/dotfiles.git
-        # 
-        [ -f "release.txt" ] && local rel=$(<release.txt) || local rel="dotfiles RELEASE-1.2.2, Aug-09 2025"
-        # 
-        # reset branch 'main' to initial root commit and pull content of 'dev'
-        git reset --hard root
+    local build_branch="branch-main"
+    [ "$1" = "--push" ] && local push=true
+
+    [ -d "$build_branch" ] && rm -rf "$build_branch"
+    git clone --single-branch -b main git@github.com:sgra64/dotfiles.git "$build_branch" &&
+        cd "$build_branch" && local in_main=true
+
+    if [ "$in_main" ]; then
+        git reset --hard HEAD~1
         git pull --squash origin dev
 
-        # remove name/email-entries from '.gitconfig' using 'gitconfig.patch'
-        git fetch origin build
-        git checkout origin/build gitconfig.patch README.md
-        git apply gitconfig.patch
-        # remove .patch files
-        git add .gitconfig
-        git rm -f *.patch
+        # git fetch origin build:refs/remotes/origin/build
+        # git checkout origin/build gitconfig.patch README.md
+        cp ../README.md ../checkout.sh .
+        git add -f README.md checkout.sh
+        # 
+        git apply ../gitconfig-remove.patch && git add .gitconfig
 
-        # see release numbers
-        git log origin/dev | grep '    '
-
+        [ -f "../release.txt" ] && local rel=$(<../release.txt) || local rel="dotfiles RELEASE-R1.2.6, Oct-09 2025"
         # git commit -m "dotfiles RELEASE-${rel}, $(date '+%b-%d-%Y')"
         git commit -m "${rel}"
         # 
         # if requested, push
-        [ "$push" ] && git push -f origin main
-        # 
-        git switch build
-    else
-        echo "could not switch to branch 'main'"
+        [ "$push" ] && git push -f origin main && local pushed=" (pushed)"
+
+        cd ..
+        echo -e "-\n--> \"$rel\" built in: \"$build_branch\"$pushed"
     fi
 }
 

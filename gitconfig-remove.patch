@@ -1,0 +1,14 @@
+diff --git a/.gitconfig b/.gitconfig
+index 0ca6375..265c205 100644
+--- a/.gitconfig
++++ b/.gitconfig
+@@ -9,9 +9,6 @@
+ # - git config --global user.name "your name"
+ # - git config --global user.email "your@email.com"
+ # 
+-[user]
+-    name = Sven Graupner
+-    email = sgraupner@bht-berlin.de
+ 
+ [core]
+     ignorecase = true       # ignore upper/lower case in file names
