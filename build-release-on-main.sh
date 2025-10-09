@@ -13,7 +13,7 @@
 # The result is in the $build_branch sub-directory.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function build_release_on_main() {
-    local build_branch="branch-main"
+    local build_branch="built-branch-main"
     [ "$1" = "--push" ] && local push=true
 
     [ -d "$build_branch" ] && rm -rf "$build_branch"
@@ -21,9 +21,9 @@ function build_release_on_main() {
         cd "$build_branch" && local in_main=true
 
     if [ "$in_main" ]; then
-        git reset --hard HEAD~1
+        # git reset --hard HEAD~1       # accumulate release history
         git pull --squash origin dev
-
+        # 
         # git fetch origin build:refs/remotes/origin/build
         # git checkout origin/build gitconfig.patch README.md
         cp ../README.md ../checkout.sh .
@@ -37,7 +37,7 @@ function build_release_on_main() {
         # 
         # if requested, push
         [ "$push" ] && git push -f origin main && local pushed=" (pushed)"
-
+        # 
         cd ..
         echo -e "-\n--> \"$rel\" built in: \"$build_branch\"$pushed"
     fi
