@@ -20,7 +20,7 @@
     eol = lf                # always use newline '\n' as end-of-line
 
 [init]
-    defaultBranch = main    # use 'main' as default branch
+	defaultBranch = main
 
 [alias]                     # create aliases called with: git <alias> ...
     changed = show --pretty=\"format:\" --name-only

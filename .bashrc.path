@@ -21,8 +21,7 @@ if [ "$HOSTNAME" = "X1-G4.11" ]; then
         export JAVA_HOME="/c/Program Files/Java/jdk-24"
         export PATH="${PATH}:${JAVA_HOME}/bin"
 
-        # Maven repository and installation directories (for 'mvn' command)
-        export M2_HOME="$HOME/.m2"
+        # Maven installation directory
         export MAVEN_HOME="/c/opt/maven"
         export PATH="${PATH}:${MAVEN_HOME}/bin"
 
@@ -62,8 +61,7 @@ if [ "$HOSTNAME" = "X1-G4W10" ]; then
         export JAVA_HOME="/c/Program Files/Java/jdk-21"
         export PATH="${PATH}:${JAVA_HOME}/bin"
 
-        # Maven repository and installation directories (for 'mvn' command)
-        export M2_HOME="$HOME/.m2"
+        # Maven installation directory
         export MAVEN_HOME="/c/opt/maven"
         export PATH="${PATH}:${MAVEN_HOME}/bin"
 
@@ -98,6 +96,11 @@ fi
 case "$HOSTNAME" in
 
 X1-G4W10|X1-G4.11)
+    # 
+    # Maven repository and installation directories (for 'mvn' command)
+    # export M2_HOME="$HOME/.m2"    # M2_HOME is no longer used by maven-3+
+    # pass repository path through MAVEN_DEBUG_OPTS, replace '/c/' -> 'C:/'
+    export MAVEN_DEBUG_OPTS="-Dmaven.repo.local=${HOME/\/c/C:}/.m2/repository"
     # 
     # start VSCode in (default: current) directory, extract path from $PATH
     function code() {

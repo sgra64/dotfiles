@@ -236,7 +236,12 @@ function functions() {  # list functions by name or specific function
 }
 
 function crlf() {   # list text files with CR/LF (Windows) line endings
+    # find text files with CR/LF line endings using the 'file' command
+    # https://unix.stackexchange.com/questions/46276/finding-all-non-binary-files
     [ "$1" ] && local dir="$*" || local dir="."
+    # 
+    # 'cut -d: -f1' outputs the first field
+    # alt: find target -type f | xargs file | grep CRLF | cut -d: -f1
     find "$dir" -not -type d -exec file "{}" ";" | grep CRLF # | cut -d: -f1
 }
 
