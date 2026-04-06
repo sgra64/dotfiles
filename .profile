@@ -251,11 +251,12 @@ if [ "${PX[declared]}" ]; then
             ;;
         esac
 
+        # "ex" used to be 'red'
         PX[ls-colors]=$(colorize_ls_colors \
             "di"    bright-white \
             "ow"    white \
             "fi"    low-white \
-            "ex"    red \
+            "ex"    low-white \
             "ln"    blue \
             "or"    blue \
             "mi"    broken-link \
