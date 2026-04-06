@@ -59,6 +59,7 @@ if [ "$HOSTNAME" = "X1-G4W10" ]; then
     if [ "$1" = "LOGIN" ]; then
         # Java installation directory (for commands: 'java', 'javac', 'jar', 'javap')
         export JAVA_HOME="/c/Program Files/Java/jdk-21"
+        # export JAVA_HOME="/c/Program Files/Java/jdk-25.0.2"
         export PATH="${PATH}:${JAVA_HOME}/bin"
 
         # Maven installation directory
@@ -75,7 +76,7 @@ if [ "$HOSTNAME" = "X1-G4W10" ]; then
         export PATH="${PATH}:${DOCKER_HOME}/resources/bin"
 
         # Qt installation directory
-        QT_HOME="/c/opt/Qt"
+        QT_HOME="/c/opt/qt"
         export PATH="${PATH}:${QT_HOME}/Tools/mingw1310_64/bin"
         # export PATH="${QT_HOME}/Tools/mingw1310_64/bin:${PATH}"
         # export PATH="${PATH}:${QT_HOME}/6.8.2/mingw_64/bin"

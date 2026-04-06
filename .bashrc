@@ -169,16 +169,16 @@ PRHOME=$HOME
 alias c="clear"                 # clear terminal
 alias aliases="alias"           # show aliases
 alias vi="vim"                  # use 'vim' for 'vi', -u ~/.vimrc
-alias ls="ls \$LS_COLOR"        # colorize ls output
-alias l="ls -alFog"             # detailed list with dotfiles
-alias ll="ls -l"                # detailed list with no dotfiles
-alias grep="grep \$LS_COLOR"    # enable colored output for grep command
-alias egrep="egrep \$LS_COLOR"  # enable colored output for egrep command
+alias ls="ls \$LS_COLOR"        # show colorize output for 'ls'
+alias l="ls -alFog"             # show detailed list with dotfiles
+alias ll="ls -l"                # show detailed list with no dotfiles
+alias grep="grep \$LS_COLOR"    # use colored output for grep command
+alias egrep="egrep \$LS_COLOR"  # use colored output for egrep command
+alias gdiff="diff --color -u"   # show output as 'git diff'
 alias pwd="pwd -LP"             # show real path with resolved links
 alias path="tr ':' '\n' <<< \$PATH"         # pretty print PATH
                                 # show environment variables, except prompt strings,
 alias env="/usr/bin/env | grep -v '\['"     # e.g. PS1, PX_EXPORT
-alias vscode="code"             # launch VSCode with command 'code'
 # 
 [ "$MAVEN_HOME" ] && \
     alias mvn="$MAVEN_HOME/bin/mvn $mvn_mono"   # -B: color off

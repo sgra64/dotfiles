@@ -32,13 +32,14 @@
         "*.rc": "shellscript",
         "*.path": "shellscript"
     },
+    "terminal.integrated.hideOnStartup": "always",  // prevent terminal show-up on startup
 
     // Editor settings
     "editor.detectIndentation": false,
     "editor.tabSize": 4,
     "editor.insertSpaces": true,            // insert spaces for tabs
     "editor.renderWhitespace": "all",       // show white spaces in editor as small dot
-    "editor.hover.enabled": true,           // show context when hovering
+    "editor.hover.enabled": "on",           // show context when hovering
     "editor.hover.delay": 1500,             // delay hover-time for context pop-ups (in ms)
     "editor.minimap.enabled": false,        // show minimap for long files
     "editor.inlayHints.enabled": "off",     // don't show argument names in method calls
@@ -112,6 +113,11 @@
     // settings to answer questions asked by VSCode upon startup
     "git.openRepositoryInParentFolders": "never",
     "containers.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
+    // "java.test.config": {
+
+    // },
+    "spring.initializr.defaultLanguage": "Java",
+    "workbench.colorTheme": "Dark Modern",
 
     // other general settings
     // "security.workspace.trust.untrustedFiles": "open",
